@@ -6,7 +6,7 @@ export const GridCellSchema = z.enum(gridCellEnum)
 export type GridCell = z.infer<typeof GridCellSchema>
 
 export const GridRewardSchema = z.object({
-  gamma: z.number().min(0).max(1),
+  gamma: z.number().min(0).max(0.99),
   cell: z.record(GridCellSchema, z.number()),
 })
 export type GridReward = z.infer<typeof GridRewardSchema>
