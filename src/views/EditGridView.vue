@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
-import { Grid } from 'lucide-vue-next'
+import EditGrid from '@/components/EditGrid.vue'
 </script>
 
 <template>
-  <Empty>
-    <EmptyHeader>
-      <EmptyMedia variant="icon">
-        <Grid />
-      </EmptyMedia>
-    </EmptyHeader>
-    <EmptyTitle>Edit Grid</EmptyTitle>
-  </Empty>
+  <EditGrid />
 </template>

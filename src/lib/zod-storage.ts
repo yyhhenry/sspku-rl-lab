@@ -2,6 +2,8 @@ import { useStorage } from '@vueuse/core'
 import { computed } from 'vue'
 import z, { ZodType } from 'zod'
 
+export const storagePrefix = 'sspku-rl-lab:'
+
 export function safeJsonParse<T>(schema: ZodType<T>, jsonString: string) {
   try {
     const parsed = JSON.parse(jsonString)
@@ -27,7 +29,7 @@ export function safeJsonParseWithDefault<T>(
 
 export function useZodStorage<T>(key: string, schema: ZodType<T>) {
   const WrappedSchema = z.object({ data: schema.optional() })
-  const storage = useStorage(key, JSON.stringify({}))
+  const storage = useStorage(`${storagePrefix}${key}`, JSON.stringify({}))
 
   const parsed = computed({
     get() {
