@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
+import { Separator } from '@/components/ui/separator'
 import {
   createDefaultGridEnv,
+  gridCellColor,
   gridCellEnum,
   GridEnvSchema,
   gridEnvStorage,
@@ -10,12 +12,6 @@ import {
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
 import { ref, watchEffect } from 'vue'
-
-const gridCellColor: Record<GridCell, string> = {
-  empty: 'bg-white/5',
-  forbidden: 'bg-yellow-600',
-  goal: 'bg-indigo-600',
-}
 
 const env = ref(gridEnvStorage.value)
 
@@ -66,7 +62,7 @@ function cycleCell(r: number, c: number) {
 
 <template>
   <div class="flex justify-center">
-    <div class="rounded-lg border p-4 bg-white/5 w-160">
+    <div class="rounded-lg border p-4 bg-white/5 w-180">
       <div class="flex gap-4 items-center justify-between">
         <div class="flex items-center gap-4">
           <span class="flex items-center gap-2">
@@ -95,31 +91,24 @@ function cycleCell(r: number, c: number) {
 
       <div class="mt-4 flex justify-between gap-6">
         <!-- reward editor -->
-        <div class="flex-1">
+        <div>
           <div class="text-sm font-bold mb-2">Rewards</div>
-          <div class="grid grid-cols-2 gap-2">
+          <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2">
-              <label class="text-sm">Gamma</label>
-              <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-24" />
+              <label class="w-28 text-sm">Gamma</label>
+              <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-32" />
             </div>
-          </div>
-          <div class="grid grid-cols-2 gap-2">
             <div class="flex items-center gap-2">
-              <label class="text-sm">Border</label>
-              <Input type="number" step="0.1" v-model.number="env.reward.border" class="w-24" />
+              <label class="w-28 text-sm">Border</label>
+              <Input type="number" step="0.1" v-model.number="env.reward.border" class="w-32" />
             </div>
-          </div>
-
-          <div class="mt-3">
-            <div class="text-xs text-muted-foreground mb-1">Enter cell rewards</div>
-            <div class="flex flex-col gap-2">
-              <div class="flex items-center gap-2" v-for="t in gridCellEnum" :key="t">
-                <div class="w-24 text-sm capitalize flex items-center gap-2">
-                  <div :class="['inline-block w-4 h-4 ml-2 rounded-full', gridCellColor[t]]"></div>
-                  <span>{{ t }}</span>
-                </div>
-                <Input type="number" step="0.01" v-model.number="env.reward.cell[t]" class="w-32" />
+            <Separator />
+            <div class="flex items-center gap-2" v-for="t in gridCellEnum" :key="t">
+              <div class="w-28 text-sm capitalize flex items-center gap-2">
+                <div :class="['inline-block w-4 h-4 ml-2 rounded-full', gridCellColor[t]]"></div>
+                <span>{{ t }}</span>
               </div>
+              <Input type="number" step="0.01" v-model.number="env.reward.cell[t]" class="w-32" />
             </div>
           </div>
         </div>

@@ -66,3 +66,9 @@ export const gridEnvStorage = useZodStorageWithDefault(
   GridEnvSchema,
   createDefaultGridEnv,
 )
+
+export const gridCellColor: Record<GridCell, string> = {
+  empty: 'bg-white/5',
+  forbidden: 'bg-yellow-600',
+  goal: 'bg-indigo-600',
+}
