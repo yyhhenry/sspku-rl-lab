@@ -18,6 +18,18 @@ export const GridRewardSchema = z
       message: 'All cell rewards must be finite numbers.',
     },
   )
+  .refine(
+    (data) => {
+      const cellTypes = Object.keys(data.cell)
+      return (
+        gridCellEnum.every((cellType) => cellTypes.includes(cellType)) &&
+        Object.keys(data.cell).length === gridCellEnum.length
+      )
+    },
+    {
+      message: 'Reward mapping must include all cell types.',
+    },
+  )
 export type GridReward = z.infer<typeof GridRewardSchema>
 
 export const GridEnvSchema = z
@@ -33,18 +45,6 @@ export const GridEnvSchema = z
     },
     {
       error: 'Cells dimensions do not match rows and cols.',
-    },
-  )
-  .refine(
-    (data) => {
-      const cellTypes = Object.keys(data.reward.cell)
-      return (
-        gridCellEnum.every((cellType) => cellTypes.includes(cellType)) &&
-        Object.keys(data.reward.cell).length === gridCellEnum.length
-      )
-    },
-    {
-      message: 'Reward mapping must include all cell types.',
     },
   )
 export type GridEnv = z.infer<typeof GridEnvSchema>
