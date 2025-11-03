@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
+import Textarea from '@/components/ui/textarea/Textarea.vue'
 import type { GridCell } from '@/lib/rl-env'
 import { createDefaultGridEnv, gridCellEnum, GridEnvSchema, gridEnvStorage } from '@/lib/rl-env'
 import { refDebounced } from '@vueuse/core'
@@ -74,91 +75,93 @@ async function copyJson() {
 </script>
 
 <template>
-  <div class="rounded-lg border p-4 bg-white/5">
-    <div class="flex gap-4 items-end">
-      <div>
-        <Button @click="resetAll()">Reset All</Button>
-      </div>
-      <div class="flex items-center gap-2">
-        <label class="text-sm">Rows</label>
-        <Input
-          type="number"
-          v-model.number="env.rows"
-          @change="setSize(env.rows, env.cols)"
-          class="w-20"
-        />
-      </div>
-      <div class="flex items-center gap-2">
-        <label class="text-sm">Cols</label>
-        <Input
-          type="number"
-          v-model.number="env.cols"
-          @change="setSize(env.rows, env.cols)"
-          class="w-20"
-        />
-      </div>
-    </div>
-
-    <div class="mt-4 flex gap-6">
-      <!-- preview table -->
-      <div>
-        <div class="text-sm font-medium mb-2">Preview</div>
-        <table class="border-collapse">
-          <tbody>
-            <tr v-for="(row, r) in env.cells" :key="r">
-              <td v-for="(cell, c) in row" :key="c" class="p-0">
-                <div
-                  @click="cycleCell(r, c)"
-                  :title="`r:${r} c:${c} -> ${cell}`"
-                  :class="[
-                    'w-10 h-10 flex items-center justify-center border cursor-pointer select-none',
-                    gridCellColor[cell],
-                  ]"
-                ></div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="mt-2 text-xs text-muted-foreground">
-          Click a cell to cycle: empty → forbidden → goal
+  <div class="flex justify-center">
+    <div class="rounded-lg border p-4 bg-white/5 w-160">
+      <div class="flex gap-4 items-center justify-between">
+        <div>
+          <Button variant="destructive" @click="resetAll()">Reset All</Button>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="flex items-center gap-2">
+            <label class="text-sm">Rows</label>
+            <Input
+              type="number"
+              v-model.number="env.rows"
+              @change="setSize(env.rows, env.cols)"
+              class="w-20"
+            />
+          </span>
+          <span class="flex items-center gap-2">
+            <label class="text-sm">Cols</label>
+            <Input
+              type="number"
+              v-model.number="env.cols"
+              @change="setSize(env.rows, env.cols)"
+              class="w-20"
+            />
+          </span>
         </div>
       </div>
 
-      <!-- reward editor -->
-      <div class="flex-1">
-        <div class="text-sm font-medium mb-2">Rewards</div>
-        <div class="grid grid-cols-2 gap-2">
-          <div class="flex items-center gap-2">
-            <label class="text-sm">Gamma</label>
-            <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-24" />
+      <div class="mt-4 flex justify-between gap-6">
+        <!-- reward editor -->
+        <div class="flex-1">
+          <div class="text-sm font-bold mb-2">Rewards</div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center gap-2">
+              <label class="text-sm">Gamma</label>
+              <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-24" />
+            </div>
           </div>
-        </div>
 
-        <div class="mt-3">
-          <div class="text-xs text-muted-foreground mb-1">Enter cell rewards</div>
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2" v-for="t in gridCellEnum" :key="t">
-              <div class="w-24 text-sm capitalize flex items-center gap-2">
-                <div :class="['inline-block w-4 h-4 ml-2 rounded-full', gridCellColor[t]]"></div>
-                <span>{{ t }}</span>
+          <div class="mt-3">
+            <div class="text-xs text-muted-foreground mb-1">Enter cell rewards</div>
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-2" v-for="t in gridCellEnum" :key="t">
+                <div class="w-24 text-sm capitalize flex items-center gap-2">
+                  <div :class="['inline-block w-4 h-4 ml-2 rounded-full', gridCellColor[t]]"></div>
+                  <span>{{ t }}</span>
+                </div>
+                <Input type="number" step="0.01" v-model.number="env.reward.cell[t]" class="w-32" />
               </div>
-              <Input type="number" step="0.01" v-model.number="env.reward.cell[t]" class="w-32" />
             </div>
           </div>
         </div>
+        <!-- preview table -->
+        <div>
+          <div class="text-sm font-bold mb-2">Preview</div>
+          <table class="border-collapse">
+            <tbody>
+              <tr v-for="(row, r) in env.cells" :key="r">
+                <td v-for="(cell, c) in row" :key="c" class="p-0">
+                  <div
+                    @click="cycleCell(r, c)"
+                    :title="`r:${r} c:${c} -> ${cell}`"
+                    :class="[
+                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none',
+                      gridCellColor[cell],
+                    ]"
+                  ></div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="mt-2 text-xs text-muted-foreground">
+            Click a cell to cycle: empty → forbidden → goal
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="mt-4 w-200">
-      <div class="flex items-center justify-between">
-        <div class="text-sm font-medium">JSON</div>
-        <Button size="sm" @click="copyJson">Copy</Button>
+      <div class="mt-2 text-xs text-red-500" v-if="errorMsg">
+        <span>{{ errorMsg }}</span>
       </div>
-      <textarea
-        readonly
-        class="w-full h-48 mt-2 p-2 bg-gray-900 text-white text-xs rounded"
-        :value="jsonString"
-      ></textarea>
+      <div class="mt-4 w-full">
+        <div class="flex items-center justify-between">
+          <div class="text-sm font-medium">JSON</div>
+          <Button size="sm" @click="copyJson">Copy</Button>
+        </div>
+        <Textarea readonly :modelValue="jsonString" class="h-48 mt-2 text-xs" />
+      </div>
     </div>
   </div>
 </template>
