@@ -107,10 +107,10 @@ const navMain = ref([
                 <SidebarMenuSub>
                   <SidebarMenuSubItem v-for="navItem in navSection.items" :key="navItem.title">
                     <SidebarMenuSubButton
-                      class="select-none cursor-default"
+                      class="select-none cursor-pointer"
                       @click="$router.push(navItem.url)"
                     >
-                      <span>{{ navItem.title }}</span>
+                      {{ navItem.title }}
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
                 </SidebarMenuSub>

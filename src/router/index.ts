@@ -11,27 +11,27 @@ const router = createRouter({
     },
     {
       path: '/edit-grid',
-      name: 'EditGrid',
+      name: 'Edit Grid',
       component: () => import('../views/EditGridView.vue'),
     },
     {
       path: '/manual-policy',
-      name: 'ManualPolicy',
+      name: 'Manual Policy',
       component: () => import('../views/ManualPolicyView.vue'),
     },
     {
       path: '/random-policy',
-      name: 'RandomPolicy',
+      name: 'Random Policy',
       component: () => import('../views/RandomPolicyView.vue'),
     },
     {
       path: '/closed-form-solution',
-      name: 'ClosedFormSolution',
+      name: 'Closed-Form Solution',
       component: () => import('../views/ClosedFormSolutionView.vue'),
     },
     {
       path: '/iterative-solution',
-      name: 'IterativeSolution',
+      name: 'Iterative Solution',
       component: () => import('../views/IterativeSolutionView.vue'),
     },
     {
