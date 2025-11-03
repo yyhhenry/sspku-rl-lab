@@ -1,22 +1,21 @@
 <script setup lang="ts">
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
-import Textarea from '@/components/ui/textarea/Textarea.vue'
-import type { GridCell } from '@/lib/rl-env'
-import { createDefaultGridEnv, gridCellEnum, GridEnvSchema, gridEnvStorage } from '@/lib/rl-env'
+import {
+  createDefaultGridEnv,
+  gridCellEnum,
+  GridEnvSchema,
+  gridEnvStorage,
+  type GridCell,
+} from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
-import { computed, ref, watchEffect } from 'vue'
-import { toast } from 'vue-sonner'
+import { ref, watchEffect } from 'vue'
 
 const gridCellColor: Record<GridCell, string> = {
   empty: 'bg-white/5',
   forbidden: 'bg-yellow-600',
   goal: 'bg-indigo-600',
 }
-
-const jsonString = computed(() => {
-  return JSON.stringify(gridEnvStorage.value)
-})
 
 const env = ref(gridEnvStorage.value)
 
@@ -63,24 +62,12 @@ function cycleCell(r: number, c: number) {
   if (!env.value.cells || !env.value.cells[r]) return
   env.value.cells[r]![c] = next
 }
-
-async function copyJson() {
-  try {
-    await navigator.clipboard.writeText(jsonString.value)
-    toast.success('Copied JSON to clipboard')
-  } catch (e) {
-    toast.error('Failed to copy')
-  }
-}
 </script>
 
 <template>
   <div class="flex justify-center">
     <div class="rounded-lg border p-4 bg-white/5 w-160">
       <div class="flex gap-4 items-center justify-between">
-        <div>
-          <Button variant="destructive" @click="resetAll()">Reset All</Button>
-        </div>
         <div class="flex items-center gap-4">
           <span class="flex items-center gap-2">
             <label class="text-sm">Rows</label>
@@ -101,6 +88,9 @@ async function copyJson() {
             />
           </span>
         </div>
+        <div>
+          <Button variant="destructive" @click="resetAll()">Reset All</Button>
+        </div>
       </div>
 
       <div class="mt-4 flex justify-between gap-6">
@@ -111,6 +101,12 @@ async function copyJson() {
             <div class="flex items-center gap-2">
               <label class="text-sm">Gamma</label>
               <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-24" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex items-center gap-2">
+              <label class="text-sm">Border</label>
+              <Input type="number" step="0.1" v-model.number="env.reward.border" class="w-24" />
             </div>
           </div>
 
@@ -150,17 +146,6 @@ async function copyJson() {
             Click a cell to cycle: empty → forbidden → goal
           </div>
         </div>
-      </div>
-
-      <div class="mt-2 text-xs text-red-500" v-if="errorMsg">
-        <span>{{ errorMsg }}</span>
-      </div>
-      <div class="mt-4 w-full">
-        <div class="flex items-center justify-between">
-          <div class="text-sm font-medium">JSON</div>
-          <Button size="sm" @click="copyJson">Copy</Button>
-        </div>
-        <Textarea readonly :modelValue="jsonString" class="h-48 mt-2 text-xs" />
       </div>
     </div>
   </div>

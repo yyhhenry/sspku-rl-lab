@@ -8,23 +8,12 @@ export type GridCell = z.infer<typeof GridCellSchema>
 export const GridRewardSchema = z
   .object({
     gamma: z.number().min(0.01).max(0.99),
+    border: z.number(),
     cell: z.record(GridCellSchema, z.number()),
   })
   .refine(
     (data) => {
-      return Object.values(data.cell).every((reward) => Number.isFinite(reward))
-    },
-    {
-      message: 'All cell rewards must be finite numbers.',
-    },
-  )
-  .refine(
-    (data) => {
-      const cellTypes = Object.keys(data.cell)
-      return (
-        gridCellEnum.every((cellType) => cellTypes.includes(cellType)) &&
-        Object.keys(data.cell).length === gridCellEnum.length
-      )
+      return gridCellEnum.every((cellType) => cellType in data.cell)
     },
     {
       message: 'Reward mapping must include all cell types.',
@@ -62,6 +51,7 @@ export function createDefaultGridEnv(): GridEnv {
     ],
     reward: {
       gamma: 0.9,
+      border: -10,
       cell: {
         empty: 0,
         forbidden: -1,
