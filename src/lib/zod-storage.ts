@@ -1,5 +1,6 @@
 import { useStorage } from '@vueuse/core'
-import { computed } from 'vue'
+import { isEqual } from 'lodash'
+import { computed, ref, watch } from 'vue'
 import z, { ZodType } from 'zod'
 
 export const storagePrefix = 'sspku-rl-lab:'
@@ -27,38 +28,35 @@ export function safeJsonParseWithDefault<T>(
   return parsed === undefined ? createDefault() : parsed
 }
 
-export function useZodStorage<T>(key: string, schema: ZodType<T>) {
+export function useZodStorage<T>(key: string, schema: ZodType<T>, createDefault: () => T) {
   const WrappedSchema = z.object({ data: schema.optional() })
-  const storage = useStorage(`${storagePrefix}${key}`, JSON.stringify({}))
+  const value = ref<T>(createDefault())
 
-  const parsed = computed({
+  const storage = useStorage(`${storagePrefix}${key}`, '{}')
+  const parsedStorage = computed({
     get() {
-      return storage.value === undefined
-        ? undefined
-        : safeJsonParse(WrappedSchema, storage.value)?.data
+      return safeJsonParse(WrappedSchema, storage.value)?.data ?? createDefault()
     },
-    set(value: T | undefined) {
-      storage.value = JSON.stringify(WrappedSchema.parse({ data: value }))
+    set(newValue: T | undefined) {
+      const wrapped = WrappedSchema.parse({ data: newValue })
+      storage.value = JSON.stringify(wrapped)
     },
   })
 
-  return parsed
-}
-export function useZodStorageWithDefault<T>(
-  key: string,
-  schema: ZodType<T>,
-  createDefault: () => T,
-) {
-  const rawZodStorage = useZodStorage<T>(key, schema)
-
-  const parsed = computed({
-    get() {
-      return rawZodStorage.value === undefined ? createDefault() : rawZodStorage.value
+  watch(
+    parsedStorage,
+    (newValue) => {
+      if (!isEqual(newValue, value.value)) {
+        value.value = newValue
+      }
     },
-    set(value: T) {
-      rawZodStorage.value = schema.parse(value)
-    },
+    { immediate: true },
+  )
+  watch(value, (newValue) => {
+    if (!isEqual(newValue, parsedStorage.value)) {
+      parsedStorage.value = newValue
+    }
   })
 
-  return parsed
+  return value
 }

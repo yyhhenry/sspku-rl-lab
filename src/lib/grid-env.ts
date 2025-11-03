@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { useZodStorageWithDefault } from './zod-storage'
+import { useZodStorage } from './zod-storage'
 
 export const gridCellEnum = ['empty', 'forbidden', 'goal'] as const
 export const GridCellSchema = z.enum(gridCellEnum)
@@ -20,11 +20,12 @@ export const GridRewardSchema = z
     },
   )
 export type GridReward = z.infer<typeof GridRewardSchema>
-
+export const GridSizeIntSchema = z.number().int().min(1).max(10)
+export type GridSizeIntItem = z.infer<typeof GridSizeIntSchema>
 export const GridEnvSchema = z
   .object({
-    rows: z.number().int().min(1),
-    cols: z.number().int().min(1),
+    rows: GridSizeIntSchema,
+    cols: GridSizeIntSchema,
     cells: z.array(z.array(GridCellSchema)),
     reward: GridRewardSchema,
   })
@@ -61,11 +62,7 @@ export function createDefaultGridEnv(): GridEnv {
   }
 }
 
-export const gridEnvStorage = useZodStorageWithDefault(
-  'grid-env',
-  GridEnvSchema,
-  createDefaultGridEnv,
-)
+export const gridEnvStorage = useZodStorage('grid-env', GridEnvSchema, createDefaultGridEnv)
 
 export const gridCellColor: Record<GridCell, string> = {
   empty: 'bg-white/5',
