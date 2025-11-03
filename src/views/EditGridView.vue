@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
 import { Separator } from '@/components/ui/separator'
@@ -12,7 +23,7 @@ import {
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
 import { ref, watchEffect } from 'vue'
-
+import z from 'zod'
 const env = ref(gridEnvStorage.value)
 
 const debouncedEnv = refDebounced(env, 300)
@@ -22,14 +33,14 @@ const errorMsg = ref<string>()
 watchEffect(() => {
   const parsedEnv = GridEnvSchema.safeParse(debouncedEnv.value)
   if (!parsedEnv.success) {
-    errorMsg.value = parsedEnv.error.message
+    errorMsg.value = z.prettifyError(parsedEnv.error)
     return
   }
   errorMsg.value = undefined
   gridEnvStorage.value = parsedEnv.data
 })
 
-function resetAll() {
+function resetGridEnv() {
   env.value = createDefaultGridEnv()
 }
 
@@ -48,6 +59,10 @@ function setSize(rows: number, cols: number) {
   env.value.rows = newRows
   env.value.cols = newCols
   env.value.cells = newCells
+}
+
+function setGamma(gamma: number) {
+  env.value.reward.gamma = Math.min(0.99, Math.max(0.01, gamma))
 }
 
 function cycleCell(r: number, c: number) {
@@ -85,7 +100,21 @@ function cycleCell(r: number, c: number) {
           </span>
         </div>
         <div>
-          <Button variant="destructive" @click="resetAll()">Reset All</Button>
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button variant="destructive">Reset Grid Env</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset Grid Env?</AlertDialogTitle>
+                <AlertDialogDescription> This action cannot be undone. </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="resetGridEnv()"> Reset </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -96,7 +125,13 @@ function cycleCell(r: number, c: number) {
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-2">
               <label class="w-28 text-sm">Gamma</label>
-              <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-32" />
+              <Input
+                type="number"
+                step="0.01"
+                v-model.number="env.reward.gamma"
+                @change="setGamma(env.reward.gamma)"
+                class="w-32"
+              />
             </div>
             <div class="flex items-center gap-2">
               <label class="w-28 text-sm">Border</label>
@@ -136,6 +171,11 @@ function cycleCell(r: number, c: number) {
           </div>
         </div>
       </div>
+
+      <template v-if="errorMsg !== undefined">
+        <Separator class="my-4" />
+        <div class="mt-2 text-sm text-red-500">{{ errorMsg }}</div>
+      </template>
     </div>
   </div>
 </template>
