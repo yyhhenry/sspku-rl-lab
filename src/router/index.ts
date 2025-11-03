@@ -20,11 +20,6 @@ const router = createRouter({
       component: () => import('../views/ManualPolicyView.vue'),
     },
     {
-      path: '/random-policy',
-      name: 'Random Policy',
-      component: () => import('../views/RandomPolicyView.vue'),
-    },
-    {
       path: '/closed-form-solution',
       name: 'Closed-Form Solution',
       component: () => import('../views/ClosedFormSolutionView.vue'),

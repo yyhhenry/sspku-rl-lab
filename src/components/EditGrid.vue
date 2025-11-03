@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
-import type { GridCell, GridEnv, GridReward } from '@/lib/rl-env'
-import { gridCellEnum, GridCellSchema, GridEnvSchema, GridRewardSchema } from '@/lib/rl-env'
-import { useZodStorageWithDefault } from '@/lib/zod-storage'
-import { computed, ref } from 'vue'
+import type { GridCell } from '@/lib/rl-env'
+import { createDefaultGridEnv, gridCellEnum, GridEnvSchema, gridEnvStorage } from '@/lib/rl-env'
+import { refDebounced } from '@vueuse/core'
+import { computed, ref, watchEffect } from 'vue'
 import { toast } from 'vue-sonner'
 
 const gridCellColor: Record<GridCell, string> = {
@@ -13,52 +13,28 @@ const gridCellColor: Record<GridCell, string> = {
   goal: 'bg-indigo-600',
 }
 
-const defaultEnv: GridEnv = {
-  rows: 5,
-  cols: 5,
-  cells: [
-    ['empty', 'empty', 'empty', 'empty', 'empty'],
-    ['empty', 'forbidden', 'forbidden', 'empty', 'empty'],
-    ['empty', 'empty', 'forbidden', 'empty', 'empty'],
-    ['empty', 'forbidden', 'goal', 'forbidden', 'empty'],
-    ['empty', 'forbidden', 'empty', 'empty', 'empty'],
-  ],
-}
-
-const defaultReward: GridReward = {
-  gamma: 0.9,
-  cell: {
-    empty: 0,
-    forbidden: -1,
-    goal: 1,
-  },
-}
-
-const envStorage = useZodStorageWithDefault('grid.env', GridEnvSchema, defaultEnv)
-const rewardStorage = useZodStorageWithDefault('grid.reward', GridRewardSchema, defaultReward)
-
 const jsonString = computed(() => {
-  return JSON.stringify({
-    env: envStorage.value,
-    reward: rewardStorage.value,
-  })
+  return JSON.stringify(gridEnvStorage.value)
 })
 
-const env = ref(envStorage.value)
-const reward = ref(rewardStorage.value)
+const env = ref(gridEnvStorage.value)
+
+const debouncedEnv = refDebounced(env, 300)
+
+const errorMsg = ref<string>()
+
+watchEffect(() => {
+  const parsedEnv = GridEnvSchema.safeParse(debouncedEnv.value)
+  if (!parsedEnv.success) {
+    errorMsg.value = parsedEnv.error.message
+    return
+  }
+  errorMsg.value = undefined
+  gridEnvStorage.value = parsedEnv.data
+})
 
 function resetAll() {
-  env.value = defaultEnv
-  reward.value = defaultReward
-  persistEnv()
-  persistReward()
-}
-// keep storage in sync
-function persistEnv() {
-  envStorage.value = env.value
-}
-function persistReward() {
-  rewardStorage.value = reward.value
+  env.value = createDefaultGridEnv()
 }
 
 function setSize(rows: number, cols: number) {
@@ -73,8 +49,9 @@ function setSize(rows: number, cols: number) {
     }
     newCells.push(row)
   }
-  env.value = { rows: newRows, cols: newCols, cells: newCells }
-  persistEnv()
+  env.value.rows = newRows
+  env.value.cols = newCols
+  env.value.cells = newCells
 }
 
 function cycleCell(r: number, c: number) {
@@ -84,35 +61,15 @@ function cycleCell(r: number, c: number) {
   const next = order[(idx + 1) % order.length] as GridCell
   if (!env.value.cells || !env.value.cells[r]) return
   env.value.cells[r]![c] = next
-  persistEnv()
 }
 
 async function copyJson() {
   try {
     await navigator.clipboard.writeText(jsonString.value)
-    // optimistic small feedback via alert (keeps this component self-contained)
-    // In the app you'd use sonner/toaster; keep minimal here.
-    // eslint-disable-next-line no-alert
-    alert('Copied JSON to clipboard')
+    toast.success('Copied JSON to clipboard')
   } catch (e) {
-    // eslint-disable-next-line no-alert
-    alert('Failed to copy')
+    toast.error('Failed to copy')
   }
-}
-
-function updateGamma(val: number) {
-  reward.value.gamma = Math.max(0, Math.min(1, val))
-  persistReward()
-}
-
-function updateCellReward(type: string, val: number) {
-  const parsedType = GridCellSchema.safeParse(type)
-  if (!parsedType.success) {
-    toast.error(`Invalid cell type: ${type}`)
-    return
-  }
-  reward.value.cell[parsedType.data] = val
-  persistReward()
 }
 </script>
 
@@ -173,13 +130,7 @@ function updateCellReward(type: string, val: number) {
         <div class="grid grid-cols-2 gap-2">
           <div class="flex items-center gap-2">
             <label class="text-sm">Gamma</label>
-            <Input
-              type="number"
-              step="0.01"
-              v-model.number="reward.gamma"
-              @change="updateGamma(reward.gamma)"
-              class="w-24"
-            />
+            <Input type="number" step="0.01" v-model.number="env.reward.gamma" class="w-24" />
           </div>
         </div>
 
@@ -191,13 +142,7 @@ function updateCellReward(type: string, val: number) {
                 <div :class="['inline-block w-4 h-4 ml-2 rounded-full', gridCellColor[t]]"></div>
                 <span>{{ t }}</span>
               </div>
-              <Input
-                type="number"
-                step="0.01"
-                v-model.number="reward.cell[t]"
-                @change="updateCellReward(t, reward.cell[t])"
-                class="w-32"
-              />
+              <Input type="number" step="0.01" v-model.number="env.reward.cell[t]" class="w-32" />
             </div>
           </div>
         </div>

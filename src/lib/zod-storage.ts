@@ -1,5 +1,4 @@
 import { useStorage } from '@vueuse/core'
-import cloneDeep from 'lodash/cloneDeep'
 import { computed } from 'vue'
 import z, { ZodType } from 'zod'
 
@@ -22,10 +21,10 @@ export function safeJsonParse<T>(schema: ZodType<T>, jsonString: string) {
 export function safeJsonParseWithDefault<T>(
   schema: ZodType<T>,
   jsonString: string,
-  defaultValue: T,
+  createDefault: () => T,
 ) {
   const parsed = safeJsonParse(schema, jsonString)
-  return parsed === undefined ? cloneDeep(defaultValue) : parsed
+  return parsed === undefined ? createDefault() : parsed
 }
 
 export function useZodStorage<T>(key: string, schema: ZodType<T>) {
@@ -45,12 +44,16 @@ export function useZodStorage<T>(key: string, schema: ZodType<T>) {
 
   return parsed
 }
-export function useZodStorageWithDefault<T>(key: string, schema: ZodType<T>, defaultValue: T) {
+export function useZodStorageWithDefault<T>(
+  key: string,
+  schema: ZodType<T>,
+  createDefault: () => T,
+) {
   const rawZodStorage = useZodStorage<T>(key, schema)
 
   const parsed = computed({
     get() {
-      return rawZodStorage.value === undefined ? cloneDeep(defaultValue) : rawZodStorage.value
+      return rawZodStorage.value === undefined ? createDefault() : rawZodStorage.value
     },
     set(value: T) {
       rawZodStorage.value = schema.parse(value)
