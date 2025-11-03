@@ -87,12 +87,6 @@ function cycleCell(r: number, c: number) {
   persistEnv()
 }
 
-function setCellType(r: number, c: number, type: GridCell) {
-  if (!env.value.cells || !env.value.cells[r]) return
-  env.value.cells[r]![c] = type
-  persistEnv()
-}
-
 async function copyJson() {
   try {
     await navigator.clipboard.writeText(jsonString.value)
@@ -125,6 +119,9 @@ function updateCellReward(type: string, val: number) {
 <template>
   <div class="rounded-lg border p-4 bg-white/5">
     <div class="flex gap-4 items-end">
+      <div>
+        <Button @click="resetAll()">Reset All</Button>
+      </div>
       <div class="flex items-center gap-2">
         <label class="text-sm">Rows</label>
         <Input
@@ -142,9 +139,6 @@ function updateCellReward(type: string, val: number) {
           @change="setSize(env.rows, env.cols)"
           class="w-20"
         />
-      </div>
-      <div>
-        <Button @click="resetAll()">Reset All</Button>
       </div>
     </div>
 
