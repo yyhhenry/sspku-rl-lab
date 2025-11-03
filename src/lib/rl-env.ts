@@ -5,10 +5,19 @@ export const gridCellEnum = ['empty', 'forbidden', 'goal'] as const
 export const GridCellSchema = z.enum(gridCellEnum)
 export type GridCell = z.infer<typeof GridCellSchema>
 
-export const GridRewardSchema = z.object({
-  gamma: z.number().min(0.01).max(0.99),
-  cell: z.record(GridCellSchema, z.number()),
-})
+export const GridRewardSchema = z
+  .object({
+    gamma: z.number().min(0.01).max(0.99),
+    cell: z.record(GridCellSchema, z.number()),
+  })
+  .refine(
+    (data) => {
+      return Object.values(data.cell).every((reward) => Number.isFinite(reward))
+    },
+    {
+      message: 'All cell rewards must be finite numbers.',
+    },
+  )
 export type GridReward = z.infer<typeof GridRewardSchema>
 
 export const GridEnvSchema = z
@@ -26,9 +35,6 @@ export const GridEnvSchema = z
       error: 'Cells dimensions do not match rows and cols.',
     },
   )
-  .refine((data) => data.reward.gamma >= 0 && data.reward.gamma <= 1, {
-    message: 'Reward gamma must be between 0 and 1.',
-  })
   .refine(
     (data) => {
       const cellTypes = Object.keys(data.reward.cell)
