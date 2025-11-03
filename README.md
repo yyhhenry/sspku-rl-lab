@@ -1,6 +1,4 @@
-# sspku-rl-lab
-
-SSPKU Reinforcement Learning Lab Repository
+# SSPKU Reinforcement Learning Lab
 
 ```bash
 pnpm install
