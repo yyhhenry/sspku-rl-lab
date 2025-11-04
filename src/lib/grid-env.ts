@@ -1,5 +1,6 @@
 import { Dot, MoveDown, MoveLeft, MoveRight, MoveUp, type LucideIcon } from 'lucide-vue-next'
 import { z } from 'zod'
+import { applyMatrixToVector, identityMatrix, matrixAdd } from './tensor'
 import { useZodStorage } from './zod-storage'
 
 export const gridCellEnum = ['empty', 'forbidden', 'goal'] as const
@@ -203,4 +204,15 @@ export function getTransitionTensor(env: GridEnv) {
     }
   }
   return transitionTensor
+}
+
+export function closedFormSolution(env: GridEnv): number[] {
+  // v = R + γ P v  => (I - γ P) v = R  => v = (I - γ P)^(-1) R
+  const gamma = env.reward.gamma
+  const P = getTransitionTensor(env)
+  const R = getRewardTensor(env)
+
+  const I = identityMatrix(R.length)
+  const A = matrixAdd(I, P, { alpha: 1, beta: -gamma })
+  return applyMatrixToVector(A, R)
 }
