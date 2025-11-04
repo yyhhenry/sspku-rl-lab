@@ -114,7 +114,17 @@ export function getPolicyExamples(
       policy: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 'right' as const)),
     },
   ]
-  return examples.filter((example) => example.rows === rows && example.cols === cols)
+  return [
+    {
+      name: 'All Stay',
+      rows,
+      cols,
+      policy: Array.from({ length: rows }, () =>
+        Array.from({ length: cols }, () => 'stay' as const),
+      ),
+    },
+    ...examples.filter((example) => example.rows === rows && example.cols === cols),
+  ]
 }
 
 export const gridEnvStorage = useZodStorage('grid-env', GridEnvSchema, createDefaultGridEnv)

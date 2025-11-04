@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   getPolicyExamples,
   gridActionEnum,
@@ -11,37 +14,23 @@ import {
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
 import cloneDeep from 'lodash/cloneDeep'
-import { ref } from 'vue'
+import { PanelTopClose } from 'lucide-vue-next'
+import { ref, watchEffect } from 'vue'
+import { toast } from 'vue-sonner'
 import z from 'zod'
 
 const env = ref<GridEnv>(gridEnvStorage.value)
 const debouncedEnv = refDebounced(env, 200)
 
-const errorMsg = ref<string>()
-
-// validate and persist
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { watchEffect } from 'vue'
+const activeTab = ref('')
 watchEffect(() => {
   const parsed = GridEnvSchema.safeParse(debouncedEnv.value)
   if (!parsed.success) {
-    errorMsg.value = z.prettifyError(parsed.error)
+    toast.error(z.prettifyError(parsed.error))
     return
   }
-  errorMsg.value = undefined
-  // persist
   gridEnvStorage.value = parsed.data
+  activeTab.value = ''
 })
 
 const actions = gridActionEnum as unknown as GridAction[]
@@ -53,46 +42,21 @@ function cycleAction(r: number, c: number) {
   if (!env.value.policy || !env.value.policy[r]) return
   env.value.policy[r]![c] = next as GridAction
 }
-
-function resetPolicy() {
-  env.value.policy = Array.from({ length: env.value.rows }, () =>
-    Array.from({ length: env.value.cols }, () => 'stay'),
-  )
-}
 </script>
 
 <template>
   <div class="flex justify-center">
     <div class="rounded-lg border p-4 bg-white/5 w-180">
-      <div class="flex items-center justify-between gap-4 mb-3">
-        <div class="flex items-center">
-          <span class="text-muted-foreground">Examples:</span>
-          <Button
-            variant="link"
-            v-for="example of getPolicyExamples(env.rows, env.cols)"
-            :key="example.name"
-            @click="env.policy = cloneDeep(example.policy)"
-          >
-            {{ example.name }}
-          </Button>
-        </div>
-        <div class="flex items-center">
-          <AlertDialog>
-            <AlertDialogTrigger as-child>
-              <Button variant="destructive">Reset Policy</Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reset Policy?</AlertDialogTitle>
-                <AlertDialogDescription> All cell actions will be reset. </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction @click="resetPolicy()"> Reset </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-muted-foreground">Examples:</span>
+        <Button
+          variant="link"
+          v-for="example of getPolicyExamples(env.rows, env.cols)"
+          :key="example.name"
+          @click="env.policy = cloneDeep(example.policy)"
+        >
+          {{ example.name }}
+        </Button>
       </div>
 
       <div class="flex justify-center">
@@ -128,6 +92,22 @@ function resetPolicy() {
           Click a cell to cycle actions: stay → right → down → left → up
         </div>
       </div>
+
+      <Separator class="my-4" />
+
+      <Tabs v-model="activeTab" class="w-full">
+        <div class="flex items-center gap-4">
+          <TabsList>
+            <TabsTrigger value="closed-form"> Closed-form Solution </TabsTrigger>
+            <TabsTrigger value="iterative"> Iterative Solution </TabsTrigger>
+          </TabsList>
+          <Button variant="secondary" @click="activeTab = ''" v-if="activeTab !== ''">
+            <PanelTopClose />
+          </Button>
+        </div>
+        <TabsContent value="closed-form"> TODO: Closed-form Solution </TabsContent>
+        <TabsContent value="iterative"> TODO: Iterative Solution </TabsContent>
+      </Tabs>
     </div>
   </div>
 </template>

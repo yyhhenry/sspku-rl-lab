@@ -15,19 +15,9 @@ const router = createRouter({
       component: () => import('../views/EditGridView.vue'),
     },
     {
-      path: '/manual-policy',
-      name: 'Manual Policy',
-      component: () => import('../views/ManualPolicyView.vue'),
-    },
-    {
-      path: '/closed-form-solution',
-      name: 'Closed-Form Solution',
-      component: () => import('../views/ClosedFormSolutionView.vue'),
-    },
-    {
-      path: '/iterative-solution',
-      name: 'Iterative Solution',
-      component: () => import('../views/IterativeSolutionView.vue'),
+      path: '/edit-policy',
+      name: 'Edit Policy',
+      component: () => import('../views/EditPolicyView.vue'),
     },
     {
       path: '/settings',

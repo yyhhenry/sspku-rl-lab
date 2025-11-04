@@ -24,7 +24,6 @@ import {
 } from '@/components/ui/sidebar'
 import {
   Bot,
-  Calculator,
   ChevronRight,
   ChevronsUpDown,
   Grid2x2Check,
@@ -46,17 +45,9 @@ const navMain = ref([
     items: [{ title: 'Edit Grid', url: '/edit-grid' }],
   },
   {
-    title: 'Edit Policy',
+    title: 'Manual Policy',
     icon: Workflow,
-    items: [{ title: 'Manual Policy', url: '/manual-policy' }],
-  },
-  {
-    title: 'Bellman Expectation',
-    icon: Calculator,
-    items: [
-      { title: 'Closed-form Solution', url: '/closed-form-solution' },
-      { title: 'Iterative Solution', url: '/iterative-solution' },
-    ],
+    items: [{ title: 'Edit Policy', url: '/edit-policy' }],
   },
 ])
 </script>
