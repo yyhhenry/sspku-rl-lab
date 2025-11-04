@@ -78,6 +78,45 @@ export function createDefaultGridEnv(): GridEnv {
   }
 }
 
+export function examplePolicy(
+  rows: number,
+  cols: number,
+): { name: string; policy: GridAction[][] }[] {
+  const examples: { name: string; rows: number; cols: number; policy: GridAction[][] }[] = [
+    {
+      name: 'Lab Example 1',
+      rows: 5,
+      cols: 5,
+      policy: [
+        ['right', 'right', 'right', 'down', 'down'],
+        ['up', 'up', 'right', 'down', 'down'],
+        ['up', 'left', 'down', 'right', 'down'],
+        ['up', 'right', 'stay', 'left', 'down'],
+        ['up', 'right', 'up', 'left', 'left'],
+      ] as const,
+    },
+    {
+      name: 'Lab Example 2',
+      rows: 5,
+      cols: 5,
+      policy: [
+        ['right', 'right', 'right', 'right', 'down'],
+        ['up', 'up', 'right', 'right', 'down'],
+        ['up', 'left', 'down', 'right', 'down'],
+        ['up', 'right', 'stay', 'left', 'down'],
+        ['up', 'right', 'up', 'left', 'left'],
+      ] as const,
+    },
+    {
+      name: 'Lab Example 3',
+      rows: 5,
+      cols: 5,
+      policy: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 'right' as const)),
+    },
+  ]
+  return examples.filter((example) => example.rows === rows && example.cols === cols)
+}
+
 export const gridEnvStorage = useZodStorage('grid-env', GridEnvSchema, createDefaultGridEnv)
 
 export const gridCellColor: Record<GridCell, string> = {
