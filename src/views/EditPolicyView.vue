@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ClosedFormSolution from '@/components/ClosedFormSolution.vue'
+import IterativeSolution from '@/components/IterativeSolution.vue'
 import PolicyCommonData from '@/components/PolicyCommonData.vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -106,7 +107,9 @@ function cycleAction(r: number, c: number) {
         <TabsContent value="closed-form">
           <ClosedFormSolution :env="gridEnvStorage" />
         </TabsContent>
-        <TabsContent value="iterative"> TODO: Iterative Solution </TabsContent>
+        <TabsContent value="iterative">
+          <IterativeSolution :env="gridEnvStorage" />
+        </TabsContent>
       </Tabs>
     </div>
   </div>
