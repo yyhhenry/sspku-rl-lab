@@ -11,7 +11,6 @@ export function safeJsonParse<T>(schema: ZodType<T>, jsonString: string) {
     if (result.success) {
       return result.data
     } else {
-      console.error(`Failed to parse JSON string:`, result.error)
       return
     }
   } catch {
