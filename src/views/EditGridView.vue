@@ -40,29 +40,15 @@ watchEffect(() => {
   gridEnvStorage.value = parsedEnv.data
 })
 
-function resetGridEnv() {
-  env.value = createDefaultGridEnv()
-}
-
-function setSize(rows: number, cols: number) {
-  const newRows = Math.max(1, Math.floor(rows))
-  const newCols = Math.max(1, Math.floor(cols))
-  const old = env.value
-  const newCells: GridCell[][] = []
-  for (let r = 0; r < newRows; r++) {
-    const row: GridCell[] = []
-    for (let c = 0; c < newCols; c++) {
-      row.push(old.cells?.[r]?.[c] ?? 'empty')
-    }
-    newCells.push(row)
+function clipValue(value: number, { min = -Infinity, max = Infinity, int = false } = {}) {
+  if (int) {
+    value = Math.floor(value)
   }
-  env.value.rows = newRows
-  env.value.cols = newCols
-  env.value.cells = newCells
+  return Math.min(max, Math.max(min, value))
 }
 
 function setGamma(gamma: number) {
-  env.value.reward.gamma = Math.min(0.99, Math.max(0.01, gamma))
+  env.value.reward.gamma = clipValue(gamma, { min: 0.01, max: 0.99 })
 }
 
 function cycleCell(r: number, c: number) {
@@ -72,6 +58,31 @@ function cycleCell(r: number, c: number) {
   const next = order[(idx + 1) % order.length] as GridCell
   if (!env.value.cells || !env.value.cells[r]) return
   env.value.cells[r]![c] = next
+}
+
+const inputSize = ref({
+  rows: env.value.rows,
+  cols: env.value.cols,
+})
+function updateSize() {
+  const newRows = clipValue(inputSize.value.rows, { min: 1, max: 10, int: true })
+  const newCols = clipValue(inputSize.value.cols, { min: 1, max: 10, int: true })
+  const old = env.value
+  const newCells: GridCell[][] = Array.from({ length: newRows }, (_, r) =>
+    Array.from({ length: newCols }, (_, c) => old.cells?.[r]?.[c] ?? 'empty'),
+  )
+  inputSize.value.rows = newRows
+  inputSize.value.cols = newCols
+  env.value.rows = newRows
+  env.value.cols = newCols
+  env.value.cells = newCells
+}
+function resetGridEnv() {
+  env.value = createDefaultGridEnv()
+  inputSize.value = {
+    rows: env.value.rows,
+    cols: env.value.cols,
+  }
 }
 </script>
 
@@ -84,18 +95,18 @@ function cycleCell(r: number, c: number) {
             <label class="text-sm">Rows</label>
             <Input
               type="number"
-              v-model.number="env.rows"
-              @change="setSize(env.rows, env.cols)"
+              v-model.number="inputSize.rows"
               class="w-20"
+              @change="updateSize()"
             />
           </span>
           <span class="flex items-center gap-2">
             <label class="text-sm">Cols</label>
             <Input
               type="number"
-              v-model.number="env.cols"
-              @change="setSize(env.rows, env.cols)"
+              v-model.number="inputSize.cols"
               class="w-20"
+              @change="updateSize()"
             />
           </span>
         </div>
