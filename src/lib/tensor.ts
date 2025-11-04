@@ -57,12 +57,8 @@ export function matrixAdd(A: number[][], B: number[][], { alpha = 1, beta = 1 } 
   }
   return result
 }
-/**
- * Calculate the inverse of a square matrix using Gauss-Jordan elimination.
- *
- * May throw an error if the matrix is singular or not square.
- */
-export function calcInverseMatrix(matrix: number[][]): number[][] {
+
+export function InvertMatrix(matrix: number[][]): number[][] {
   const [n, m] = checkMatrix(matrix)
   if (n !== m) {
     throw new Error('Matrix must be square to calculate its inverse')

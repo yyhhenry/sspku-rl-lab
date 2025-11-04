@@ -14,7 +14,7 @@ const rewardTensor = computed(() => getRewardTensor(env.value))
 
 const transitionTensor = computed(() => getTransitionTensor(env.value))
 
-const commonDataMarkdown = computed(() => {
+const md = computed(() => {
   return [
     `$v_\\pi = r_\\pi + \\gamma P_\\pi v_\\pi$`,
     `Here, $v_\\pi$ is the value function under policy $\\pi$, $r_\\pi$ is the expected immediate reward vector under policy $\\pi$, $P_\\pi$ is the state transition matrix under policy $\\pi$, and $\\gamma$ is the discount factor. Where:`,
@@ -27,7 +27,7 @@ const commonDataMarkdown = computed(() => {
 })
 </script>
 <template>
-  <div class="w-full overflow-x-auto break-words">
-    <MarkedView :markdown="commonDataMarkdown" />
+  <div class="w-full overflow-x-auto">
+    <MarkedView :markdown="md" />
   </div>
 </template>

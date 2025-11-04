@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ClosedFormSolution from '@/components/ClosedFormSolution.vue'
 import PolicyCommonData from '@/components/PolicyCommonData.vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -22,7 +23,6 @@ import z from 'zod'
 const env = ref<GridEnv>(gridEnvStorage.value)
 const debouncedEnv = refDebounced(env, 200)
 
-const activeTab = ref('common-data')
 watchEffect(() => {
   const parsed = GridEnvSchema.safeParse(debouncedEnv.value)
   if (!parsed.success) {
@@ -30,7 +30,6 @@ watchEffect(() => {
     return
   }
   gridEnvStorage.value = parsed.data
-  activeTab.value = 'common-data'
 })
 
 const actions = gridActionEnum as unknown as GridAction[]
@@ -95,7 +94,7 @@ function cycleAction(r: number, c: number) {
 
       <Separator class="my-4" />
 
-      <Tabs v-model="activeTab" class="w-full">
+      <Tabs default-value="common-data" class="w-full">
         <TabsList>
           <TabsTrigger value="common-data"> Common Data </TabsTrigger>
           <TabsTrigger value="closed-form"> Closed-form Solution </TabsTrigger>
@@ -104,7 +103,9 @@ function cycleAction(r: number, c: number) {
         <TabsContent value="common-data">
           <PolicyCommonData :env="gridEnvStorage" />
         </TabsContent>
-        <TabsContent value="closed-form"> TODO: Closed-form Solution </TabsContent>
+        <TabsContent value="closed-form">
+          <ClosedFormSolution :env="gridEnvStorage" />
+        </TabsContent>
         <TabsContent value="iterative"> TODO: Iterative Solution </TabsContent>
       </Tabs>
     </div>
