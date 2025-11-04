@@ -37,7 +37,7 @@ watchEffect(() => {
     return
   }
   errorMsg.value = undefined
-  gridEnvStorage.value = parsedEnv.data
+  gridEnvStorage.value = { ...gridEnvStorage.value, ...parsedEnv.data }
 })
 
 function clipValue(value: number, { min = -Infinity, max = Infinity, int = false } = {}) {

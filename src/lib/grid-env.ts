@@ -39,17 +39,25 @@ export const GridEnvSchema = z
   )
 export type GridEnv = z.infer<typeof GridEnvSchema>
 
-export function createDefaultGridEnv(): GridEnv {
+export function createDefaultGridEnv(): GridEnvWithPolicy {
+  const rows = 5
+  const cols = 5
+  const cells = [
+    ['empty', 'empty', 'empty', 'empty', 'empty'],
+    ['empty', 'forbidden', 'forbidden', 'empty', 'empty'],
+    ['empty', 'empty', 'forbidden', 'empty', 'empty'],
+    ['empty', 'forbidden', 'goal', 'forbidden', 'empty'],
+    ['empty', 'forbidden', 'empty', 'empty', 'empty'],
+  ] as const
+
+  const policy: GridPolicy = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => 'stay'),
+  )
+
   return {
-    rows: 5,
-    cols: 5,
-    cells: [
-      ['empty', 'empty', 'empty', 'empty', 'empty'],
-      ['empty', 'forbidden', 'forbidden', 'empty', 'empty'],
-      ['empty', 'empty', 'forbidden', 'empty', 'empty'],
-      ['empty', 'forbidden', 'goal', 'forbidden', 'empty'],
-      ['empty', 'forbidden', 'empty', 'empty', 'empty'],
-    ],
+    rows,
+    cols,
+    cells: cells as unknown as GridEnv['cells'],
     reward: {
       gamma: 0.9,
       border: -10,
@@ -59,13 +67,50 @@ export function createDefaultGridEnv(): GridEnv {
         goal: 1,
       },
     },
+    policy,
   }
 }
 
-export const gridEnvStorage = useZodStorage('grid-env', GridEnvSchema, createDefaultGridEnv)
+// NOTE: gridEnvStorage is declared after the policy/schema definitions below to avoid TDZ/runtime init order issues
 
 export const gridCellColor: Record<GridCell, string> = {
   empty: 'bg-white/5',
   forbidden: 'bg-yellow-600',
   goal: 'bg-indigo-600',
 }
+
+// Actions for manual policy (deterministic single action per cell)
+export const gridActionEnum = ['stay', 'up', 'down', 'left', 'right'] as const
+export const GridActionSchema = z.enum(gridActionEnum)
+export type GridAction = z.infer<typeof GridActionSchema>
+
+export const GridPolicySchema = z.array(z.array(GridActionSchema))
+
+// policy must match rows/cols dimensions
+export const GridEnvWithPolicySchema = GridEnvSchema.extend({
+  policy: GridPolicySchema,
+}).refine(
+  (data) => {
+    return data.policy.length === data.rows && data.policy.every((row) => row.length === data.cols)
+  },
+  {
+    error: 'Policy dimensions do not match rows and cols.',
+  },
+)
+
+export type GridPolicy = z.infer<typeof GridPolicySchema>
+export type GridEnvWithPolicy = z.infer<typeof GridEnvWithPolicySchema>
+
+export const gridActionColor: Record<GridAction, string> = {
+  stay: 'bg-white/5',
+  up: 'bg-sky-500',
+  right: 'bg-green-500',
+  down: 'bg-red-500',
+  left: 'bg-yellow-500',
+}
+
+export const gridEnvStorage = useZodStorage(
+  'grid-env',
+  GridEnvWithPolicySchema,
+  createDefaultGridEnv,
+)
