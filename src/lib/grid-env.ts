@@ -67,7 +67,7 @@ export function createDefaultGridEnv(): GridEnv {
     ] as const,
     reward: {
       gamma: 0.9,
-      border: -10,
+      border: -1,
       cell: {
         empty: 0,
         forbidden: -1,

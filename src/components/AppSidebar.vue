@@ -41,7 +41,6 @@ const navMain = ref([
   {
     title: 'Environment',
     icon: Grid2x2Check,
-    defaultOpen: true,
     items: [{ title: 'Edit Grid', url: '/edit-grid' }],
   },
   {
@@ -78,7 +77,7 @@ const navMain = ref([
             v-for="navSection in navMain"
             :key="navSection.title"
             as-child
-            :default-open="navSection.defaultOpen"
+            :default-open="true"
             class="group/collapsible"
           >
             <SidebarMenuItem>
