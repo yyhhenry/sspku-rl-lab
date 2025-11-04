@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MarkedView from '@/components/MarkedView.vue'
 import { getRewardTensor, getTransitionTensor, type GridEnv } from '@/lib/grid-env'
-import { displayMatrix, displayVector } from '@/lib/tensor'
+import { displayMatrix } from '@/lib/tensor'
 import { computed } from 'vue'
 
 const props = defineProps<{
@@ -19,7 +19,8 @@ const commonDataMarkdown = computed(() => {
     `$v_\\pi = r_\\pi + \\gamma P_\\pi v_\\pi$`,
     `Here, $v_\\pi$ is the value function under policy $\\pi$, $r_\\pi$ is the expected immediate reward vector under policy $\\pi$, $P_\\pi$ is the state transition matrix under policy $\\pi$, and $\\gamma$ is the discount factor. Where:`,
     `$\\gamma = ${env.value.reward.gamma}$`,
-    `$(r_\\pi)^T =$ ${displayVector(rewardTensor.value, 0)}`,
+    `$(r_\\pi)^T =$`,
+    `${displayMatrix([rewardTensor.value])}`,
     `$P_\\pi = $`,
     `${displayMatrix(transitionTensor.value, 0, ' ')}`,
   ].join('\n\n')

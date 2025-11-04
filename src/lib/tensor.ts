@@ -10,11 +10,8 @@ export function checkMatrix(matrix: number[][]): [number, number] {
   return [rows, cols]
 }
 
-export function displayVector(vector: number[], fractionDigits = 2) {
-  return `[${vector.map((v) => v.toFixed(fractionDigits)).join(', ')}]`
-}
-
 export function displayMatrix(matrix: number[][], fractionDigits = 2, separator = ', ') {
+  checkMatrix(matrix)
   return matrix
     .map((row) => `${row.map((v) => v.toFixed(fractionDigits)).join(separator)}`)
     .join('\n\n')
