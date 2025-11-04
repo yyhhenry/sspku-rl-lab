@@ -73,7 +73,7 @@ const page = computed({
       <Separator orientation="vertical" />
       <span>Max diff: {{ valueTensor.maxDiff.toFixed(4) }}</span>
     </div>
-    <div v-if="valueTensor" class="flex justify-center">
+    <div v-if="valueTensor" class="my-4 flex justify-center">
       <div>
         <table class="border-collapse">
           <tbody>

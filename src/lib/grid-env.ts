@@ -121,6 +121,18 @@ export function getPolicyExamples(
       cols: 5,
       policy: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 'right' as const)),
     },
+    {
+      name: 'Policy 4',
+      rows: 5,
+      cols: 5,
+      policy: [
+        ['right', 'left', 'left', 'up', 'up'],
+        ['down', 'stay', 'right', 'down', 'right'],
+        ['left', 'right', 'down', 'left', 'stay'],
+        ['stay', 'down', 'up', 'up', 'right'],
+        ['stay', 'right', 'stay', 'right', 'stay'],
+      ] as const,
+    },
   ]
   return [
     {
