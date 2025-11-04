@@ -19,6 +19,7 @@ import {
   gridCellEnum,
   GridEnvSchema,
   gridEnvStorage,
+  type GridAction,
   type GridCell,
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
@@ -37,7 +38,7 @@ watchEffect(() => {
     return
   }
   errorMsg.value = undefined
-  gridEnvStorage.value = parsedEnv.data
+  gridEnvStorage.value = { ...gridEnvStorage.value, ...parsedEnv.data }
 })
 
 function clipValue(value: number, { min = -Infinity, max = Infinity, int = false } = {}) {
@@ -71,11 +72,15 @@ function updateSize() {
   const newCells: GridCell[][] = Array.from({ length: newRows }, (_, r) =>
     Array.from({ length: newCols }, (_, c) => old.cells?.[r]?.[c] ?? 'empty'),
   )
+  const newPolicy: GridAction[][] = Array.from({ length: newRows }, (_, r) =>
+    Array.from({ length: newCols }, (_, c) => old.policy?.[r]?.[c] ?? 'stay'),
+  )
   inputSize.value.rows = newRows
   inputSize.value.cols = newCols
   env.value.rows = newRows
   env.value.cols = newCols
   env.value.cells = newCells
+  env.value.policy = newPolicy
 }
 function resetGridEnv() {
   env.value = createDefaultGridEnv()
@@ -169,7 +174,7 @@ function resetGridEnv() {
                     @click="cycleCell(r, c)"
                     :title="`r:${r} c:${c} -> ${cell}`"
                     :class="[
-                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none',
+                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
                       gridCellColor[cell],
                     ]"
                   ></div>
