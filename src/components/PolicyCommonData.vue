@@ -22,10 +22,12 @@ const commonDataMarkdown = computed(() => {
     `$(r_\\pi)^T =$`,
     `${displayMatrix([rewardTensor.value])}`,
     `$P_\\pi = $`,
-    `${displayMatrix(transitionTensor.value, 0, ' ')}`,
+    `<pre>${displayMatrix(transitionTensor.value, 0, ' ')}</pre>`,
   ].join('\n\n')
 })
 </script>
 <template>
-  <MarkedView :markdown="commonDataMarkdown" />
+  <div class="w-full overflow-x-auto break-words">
+    <MarkedView :markdown="commonDataMarkdown" />
+  </div>
 </template>

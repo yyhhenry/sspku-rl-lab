@@ -10,11 +10,16 @@ export function checkMatrix(matrix: number[][]): [number, number] {
   return [rows, cols]
 }
 
-export function displayMatrix(matrix: number[][], fractionDigits = 2, separator = ', ') {
+export function displayMatrix(
+  matrix: number[][],
+  fractionDigits = 2,
+  elementDelimiter = ', ',
+  lineDelimiter = '\n',
+): string {
   checkMatrix(matrix)
   return matrix
-    .map((row) => `${row.map((v) => v.toFixed(fractionDigits)).join(separator)}`)
-    .join('\n\n')
+    .map((row) => row.map((v) => v.toFixed(fractionDigits)).join(elementDelimiter))
+    .join(lineDelimiter)
 }
 export function createMatrix(
   rows: number,
