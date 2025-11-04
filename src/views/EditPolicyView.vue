@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import MarkedView from '@/components/MarkedView.vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  displaySparseBoolMatrix,
+  displayVector,
   getPolicyExamples,
+  getRewardTensor,
+  getTransitionTensor,
   gridActionEnum,
   gridActionIcon,
   gridCellColor,
@@ -14,15 +19,14 @@ import {
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
 import cloneDeep from 'lodash/cloneDeep'
-import { PanelTopClose } from 'lucide-vue-next'
-import { ref, watchEffect } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 import { toast } from 'vue-sonner'
 import z from 'zod'
 
 const env = ref<GridEnv>(gridEnvStorage.value)
 const debouncedEnv = refDebounced(env, 200)
 
-const activeTab = ref('')
+const activeTab = ref('original-data')
 watchEffect(() => {
   const parsed = GridEnvSchema.safeParse(debouncedEnv.value)
   if (!parsed.success) {
@@ -30,7 +34,7 @@ watchEffect(() => {
     return
   }
   gridEnvStorage.value = parsed.data
-  activeTab.value = ''
+  activeTab.value = 'original-data'
 })
 
 const actions = gridActionEnum as unknown as GridAction[]
@@ -42,6 +46,22 @@ function cycleAction(r: number, c: number) {
   if (!env.value.policy || !env.value.policy[r]) return
   env.value.policy[r]![c] = next as GridAction
 }
+
+// Tensors for markdown display
+
+const rewardTensor = computed(() => getRewardTensor(gridEnvStorage.value))
+
+const transitionTensor = computed(() => getTransitionTensor(gridEnvStorage.value))
+
+const commonMarkdown = computed(() => {
+  return [
+    `$v_\\pi = r_\\pi + \\gamma P_\\pi v_\\pi$`,
+    `Here, $v_\\pi$ is the value function under policy $\\pi$, $r_\\pi$ is the expected immediate reward vector under policy $\\pi$, $P_\\pi$ is the state transition matrix under policy $\\pi$, and $\\gamma$ is the discount factor. Where:`,
+    `$\\gamma = ${env.value.reward.gamma}$`,
+    `$(r_\\pi)^T =$ [${displayVector(rewardTensor.value, 0)}]`,
+    `$P_\\pi = $ ${displaySparseBoolMatrix(transitionTensor.value)}`,
+  ].join('\n\n')
+})
 </script>
 
 <template>
@@ -96,15 +116,14 @@ function cycleAction(r: number, c: number) {
       <Separator class="my-4" />
 
       <Tabs v-model="activeTab" class="w-full">
-        <div class="flex items-center gap-4">
-          <TabsList>
-            <TabsTrigger value="closed-form"> Closed-form Solution </TabsTrigger>
-            <TabsTrigger value="iterative"> Iterative Solution </TabsTrigger>
-          </TabsList>
-          <Button variant="secondary" @click="activeTab = ''" v-if="activeTab !== ''">
-            <PanelTopClose />
-          </Button>
-        </div>
+        <TabsList>
+          <TabsTrigger value="original-data"> Original Data </TabsTrigger>
+          <TabsTrigger value="closed-form"> Closed-form Solution </TabsTrigger>
+          <TabsTrigger value="iterative"> Iterative Solution </TabsTrigger>
+        </TabsList>
+        <TabsContent value="original-data">
+          <MarkedView :markdown="commonMarkdown" />
+        </TabsContent>
         <TabsContent value="closed-form"> TODO: Closed-form Solution </TabsContent>
         <TabsContent value="iterative"> TODO: Iterative Solution </TabsContent>
       </Tabs>

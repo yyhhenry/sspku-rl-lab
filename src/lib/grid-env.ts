@@ -8,6 +8,13 @@ export type GridCell = z.infer<typeof GridCellSchema>
 export const gridActionEnum = ['stay', 'right', 'down', 'left', 'up'] as const
 export const GridActionSchema = z.enum(gridActionEnum)
 export type GridAction = z.infer<typeof GridActionSchema>
+export const actionDeltas: Record<GridAction, { deltaR: number; deltaC: number }> = {
+  stay: { deltaR: 0, deltaC: 0 },
+  right: { deltaR: 0, deltaC: 1 },
+  down: { deltaR: 1, deltaC: 0 },
+  left: { deltaR: 0, deltaC: -1 },
+  up: { deltaR: -1, deltaC: 0 },
+}
 
 export const GridRewardSchema = z
   .object({
@@ -141,4 +148,78 @@ export const gridActionIcon: Record<GridAction, LucideIcon> = {
   down: MoveDown,
   left: MoveLeft,
   right: MoveRight,
+}
+
+export function safeGetCell(env: GridEnv, r: number, c: number): GridCell {
+  return env.cells[r]?.[c] ?? 'empty'
+}
+export function safeGetCellPolicy(env: GridEnv, r: number, c: number): GridAction {
+  return env.policy[r]?.[c] ?? 'stay'
+}
+
+export function getActionResult(
+  env: GridEnv,
+  r: number,
+  c: number,
+  action: GridAction,
+): { r: number; c: number; reward: number } {
+  const { deltaR, deltaC } = actionDeltas[action]
+  const newR = r + deltaR
+  const newC = c + deltaC
+  if (newR < 0 || newR >= env.rows || newC < 0 || newC >= env.cols) {
+    return { r, c, reward: env.reward.border }
+  }
+  return { r: newR, c: newC, reward: env.reward.cell[safeGetCell(env, newR, newC)] }
+}
+
+export function getRewardTensor(env: GridEnv) {
+  const rows = env.rows
+  const cols = env.cols
+  const rewardMatrix: number[] = []
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      rewardMatrix.push(getActionResult(env, r, c, safeGetCellPolicy(env, r, c)).reward)
+    }
+  }
+
+  return rewardMatrix
+}
+
+export function getTransitionTensor(env: GridEnv) {
+  const rows = env.rows
+  const cols = env.cols
+  const stateCount = rows * cols
+  const transitionTensor: number[][] = Array.from({ length: stateCount }, () =>
+    Array.from({ length: stateCount }, () => 0),
+  )
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const stateIndex = r * cols + c
+      const action = safeGetCellPolicy(env, r, c)
+      const { r: newR, c: newC } = getActionResult(env, r, c, action)
+      const newStateIndex = newR * cols + newC
+      transitionTensor[stateIndex]![newStateIndex] = 1
+    }
+  }
+  return transitionTensor
+}
+
+export function displayVector(vector: number[], fractionDigits = 2) {
+  return `[${vector.map((v) => v.toFixed(fractionDigits)).join(', ')}]`
+}
+
+export function displaySparseBoolMatrix(matrix: number[][]) {
+  const rows = matrix.length
+  const cols = matrix[0]?.length || 0
+  const items: string[] = []
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const value = matrix[r]![c]!
+      if (value !== 0) {
+        items.push(`(${r}, ${c})`)
+      }
+    }
+  }
+  return `SparseBoolMatrix(${rows}x${cols}) [${items.join(', ')}]`
 }
