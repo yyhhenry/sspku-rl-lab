@@ -74,13 +74,7 @@ export function createDefaultGridEnv(): GridEnv {
         goal: 1,
       },
     },
-    policy: [
-      ['stay', 'stay', 'stay', 'stay', 'stay'],
-      ['stay', 'stay', 'stay', 'stay', 'stay'],
-      ['stay', 'stay', 'stay', 'stay', 'stay'],
-      ['stay', 'stay', 'stay', 'stay', 'stay'],
-      ['stay', 'stay', 'stay', 'stay', 'stay'],
-    ],
+    policy: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 'stay' as const)),
   }
 }
 
