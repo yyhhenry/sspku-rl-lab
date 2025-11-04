@@ -1,6 +1,5 @@
 import { useStorage } from '@vueuse/core'
-import { isEqual } from 'lodash'
-import { computed, ref, watch } from 'vue'
+// no direct Vue ref needed here; useStorage returns a Ref<T>
 import z, { ZodType } from 'zod'
 
 export const storagePrefix = 'sspku-rl-lab:'
@@ -29,34 +28,19 @@ export function safeJsonParseWithDefault<T>(
 }
 
 export function useZodStorage<T>(key: string, schema: ZodType<T>, createDefault: () => T) {
-  const WrappedSchema = z.object({ data: schema.optional() })
-  const value = ref<T>(createDefault())
-
-  const storage = useStorage(`${storagePrefix}${key}`, '{}')
-  const parsedStorage = computed({
-    get() {
-      return safeJsonParse(WrappedSchema, storage.value)?.data ?? createDefault()
-    },
-    set(newValue: T | undefined) {
-      const wrapped = WrappedSchema.parse({ data: newValue })
-      storage.value = JSON.stringify(wrapped)
+  const storageKey = storagePrefix + key
+  const WrappedSchema = z.object({ value: schema })
+  const storage = useStorage<T>(storageKey, createDefault(), undefined, {
+    serializer: {
+      read: (raw) => {
+        return safeJsonParse(WrappedSchema, raw)?.value ?? createDefault()
+      },
+      write: (v: T) => {
+        const parsed = WrappedSchema.parse({ value: v })
+        return JSON.stringify(parsed)
+      },
     },
   })
 
-  watch(
-    parsedStorage,
-    (newValue) => {
-      if (!isEqual(newValue, value.value)) {
-        value.value = newValue
-      }
-    },
-    { immediate: true },
-  )
-  watch(value, (newValue) => {
-    if (!isEqual(newValue, parsedStorage.value)) {
-      parsedStorage.value = newValue
-    }
-  })
-
-  return value
+  return storage
 }
