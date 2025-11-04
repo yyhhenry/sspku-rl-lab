@@ -207,7 +207,7 @@ export function getTransitionTensor(env: GridEnv) {
 }
 
 export function closedFormSolution(env: GridEnv): number[] {
-  // v = R + γ P v  => (I - γ P) v = R  => v = (I - γ P)^(-1) R
+  //  v = (I - γ P)^(-1) R
   const gamma = env.reward.gamma
   const P = getTransitionTensor(env)
   const R = getRewardTensor(env)

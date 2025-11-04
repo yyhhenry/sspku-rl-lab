@@ -14,19 +14,11 @@ export function displayVector(vector: number[], fractionDigits = 2) {
   return `[${vector.map((v) => v.toFixed(fractionDigits)).join(', ')}]`
 }
 
-export function displaySparseBoolMatrix(matrix: number[][]) {
-  const [rows, cols] = checkMatrix(matrix)
-  const items: string[] = []
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (matrix[r]![c]! !== 0) {
-        items.push(`(${r}, ${c})`)
-      }
-    }
-  }
-  return `SparseBoolMatrix(${rows}x${cols}) [${items.join(', ')}]`
+export function displayMatrix(matrix: number[][], fractionDigits = 2, separator = ', ') {
+  return matrix
+    .map((row) => `${row.map((v) => v.toFixed(fractionDigits)).join(separator)}`)
+    .join('\n\n')
 }
-
 export function createMatrix(
   rows: number,
   cols: number,
