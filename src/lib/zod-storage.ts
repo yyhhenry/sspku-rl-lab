@@ -1,6 +1,8 @@
 import { useStorage } from '@vueuse/core'
-import { computed } from 'vue'
+// no direct Vue ref needed here; useStorage returns a Ref<T>
 import z, { ZodType } from 'zod'
+
+export const storagePrefix = 'sspku-rl-lab:'
 
 export function safeJsonParse<T>(schema: ZodType<T>, jsonString: string) {
   try {
@@ -19,40 +21,26 @@ export function safeJsonParse<T>(schema: ZodType<T>, jsonString: string) {
 export function safeJsonParseWithDefault<T>(
   schema: ZodType<T>,
   jsonString: string,
-  defaultValue: T,
+  createDefault: () => T,
 ) {
   const parsed = safeJsonParse(schema, jsonString)
-  return parsed === undefined ? defaultValue : parsed
+  return parsed === undefined ? createDefault() : parsed
 }
 
-export function useZodStorage<T>(key: string, schema: ZodType<T>) {
-  const WrappedSchema = z.object({ data: schema.optional() })
-  const storage = useStorage(key, JSON.stringify({}))
-
-  const parsed = computed({
-    get() {
-      return storage.value === undefined
-        ? undefined
-        : safeJsonParse(WrappedSchema, storage.value)?.data
-    },
-    set(value: T | undefined) {
-      storage.value = JSON.stringify(WrappedSchema.parse({ data: value }))
+export function useZodStorage<T>(key: string, schema: ZodType<T>, createDefault: () => T) {
+  const storageKey = storagePrefix + key
+  const WrappedSchema = z.object({ value: schema })
+  const storage = useStorage<T>(storageKey, createDefault(), undefined, {
+    serializer: {
+      read: (raw) => {
+        return safeJsonParse(WrappedSchema, raw)?.value ?? createDefault()
+      },
+      write: (v: T) => {
+        const parsed = WrappedSchema.parse({ value: v })
+        return JSON.stringify(parsed)
+      },
     },
   })
 
-  return parsed
-}
-export function useZodStorageWithDefault<T>(key: string, schema: ZodType<T>, defaultValue: T) {
-  const rawZodStorage = useZodStorage<T>(key, schema)
-
-  const parsed = computed({
-    get() {
-      return rawZodStorage.value === undefined ? defaultValue : rawZodStorage.value
-    },
-    set(value: T) {
-      rawZodStorage.value = schema.parse(value)
-    },
-  })
-
-  return parsed
+  return storage
 }

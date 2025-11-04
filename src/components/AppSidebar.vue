@@ -40,18 +40,15 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 
 const navMain = ref([
   {
-    title: 'Grid & Reward',
+    title: 'Environment',
     icon: Grid2x2Check,
     defaultOpen: true,
     items: [{ title: 'Edit Grid', url: '/edit-grid' }],
   },
   {
-    title: 'Policy & Value',
+    title: 'Edit Policy',
     icon: Workflow,
-    items: [
-      { title: 'Manual Policy', url: '/manual-policy' },
-      { title: 'Random Policy', url: '/random-policy' },
-    ],
+    items: [{ title: 'Manual Policy', url: '/manual-policy' }],
   },
   {
     title: 'Bellman Expectation',
