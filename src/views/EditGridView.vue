@@ -19,6 +19,7 @@ import {
   gridCellEnum,
   GridEnvSchema,
   gridEnvStorage,
+  type GridAction,
   type GridCell,
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
@@ -71,11 +72,15 @@ function updateSize() {
   const newCells: GridCell[][] = Array.from({ length: newRows }, (_, r) =>
     Array.from({ length: newCols }, (_, c) => old.cells?.[r]?.[c] ?? 'empty'),
   )
+  const newPolicy: GridAction[][] = Array.from({ length: newRows }, (_, r) =>
+    Array.from({ length: newCols }, (_, c) => old.policy?.[r]?.[c] ?? 'stay'),
+  )
   inputSize.value.rows = newRows
   inputSize.value.cols = newCols
   env.value.rows = newRows
   env.value.cols = newCols
   env.value.cells = newCells
+  env.value.policy = newPolicy
 }
 function resetGridEnv() {
   env.value = createDefaultGridEnv()

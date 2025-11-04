@@ -51,44 +51,43 @@ function resetPolicy() {
 <template>
   <div class="flex justify-center">
     <div class="rounded-lg border p-4 bg-white/5 w-180">
-      <div class="flex items-center gap-4 mb-3">
+      <div class="flex items-center justify-end gap-4 mb-3">
         <Button variant="destructive" @click="resetPolicy"> Reset Policy </Button>
       </div>
 
-      <div>
-        <div class="text-sm font-bold mb-2">Grid</div>
-        <table class="border-collapse">
-          <tbody>
-            <tr v-for="(row, r) in env.cells" :key="r">
-              <td v-for="(cell, c) in row" :key="c" class="p-0">
-                <div
-                  :title="`r:${r} c:${c} -> ${cell}`"
-                  :class="[
-                    'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
-                    gridCellColor[cell],
-                  ]"
-                >
-                  <span>
-                    <component
-                      :is="gridActionIcon[env.policy?.[r]?.[c] ?? 'stay']"
-                      @click="cycleAction(r, c)"
-                      class="w-6 h-6 cursor-pointer"
-                    />
-                  </span>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="flex justify-center">
+        <div>
+          <div class="text-sm font-bold mb-2">Grid</div>
+          <table class="border-collapse">
+            <tbody>
+              <tr v-for="(row, r) in env.cells" :key="r">
+                <td v-for="(cell, c) in row" :key="c" class="p-0">
+                  <div
+                    @click="cycleAction(r, c)"
+                    :title="`r:${r} c:${c} -> ${cell}`"
+                    :class="[
+                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
+                      gridCellColor[cell],
+                    ]"
+                  >
+                    <span>
+                      <component
+                        :is="gridActionIcon[env.policy?.[r]?.[c] ?? 'stay']"
+                        class="w-6 h-6 cursor-pointer"
+                      />
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <div class="mt-2 text-xs text-muted-foreground">
-        Click a cell to cycle actions: stay → right → down → left → up
+      <div class="flex justify-center">
+        <div class="mt-2 text-xs text-muted-foreground">
+          Click a cell to cycle actions: stay → right → down → left → up
+        </div>
       </div>
-
-      <template v-if="errorMsg !== undefined">
-        <div class="mt-2 text-sm text-red-500">{{ errorMsg }}</div>
-      </template>
     </div>
   </div>
 </template>
