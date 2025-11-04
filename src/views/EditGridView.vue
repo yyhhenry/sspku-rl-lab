@@ -169,7 +169,7 @@ function resetGridEnv() {
                     @click="cycleCell(r, c)"
                     :title="`r:${r} c:${c} -> ${cell}`"
                     :class="[
-                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none',
+                      'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
                       gridCellColor[cell],
                     ]"
                   ></div>

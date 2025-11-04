@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import {
-  gridActionColor,
   gridActionEnum,
+  gridActionIcon,
+  gridCellColor,
+  GridEnvSchema,
   gridEnvStorage,
-  GridEnvWithPolicySchema,
   type GridAction,
-  type GridEnvWithPolicy,
+  type GridEnv,
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
-import { Hand } from 'lucide-vue-next'
 import { ref } from 'vue'
 import z from 'zod'
 
-const env = ref<GridEnvWithPolicy>(gridEnvStorage.value)
+const env = ref<GridEnv>(gridEnvStorage.value)
 const debouncedEnv = refDebounced(env, 200)
 
 const errorMsg = ref<string>()
 
 // validate and persist
+import { Button } from '@/components/ui/button'
 import { watchEffect } from 'vue'
 watchEffect(() => {
-  const parsed = GridEnvWithPolicySchema.safeParse(debouncedEnv.value)
+  const parsed = GridEnvSchema.safeParse(debouncedEnv.value)
   if (!parsed.success) {
     errorMsg.value = z.prettifyError(parsed.error)
     return
@@ -49,59 +49,46 @@ function resetPolicy() {
 </script>
 
 <template>
-  <Empty>
-    <EmptyHeader>
-      <EmptyMedia variant="icon">
-        <Hand />
-      </EmptyMedia>
-    </EmptyHeader>
-    <EmptyTitle>Manual Policy</EmptyTitle>
-    <div class="mt-4">
+  <div class="flex justify-center">
+    <div class="rounded-lg border p-4 bg-white/5 w-180">
       <div class="flex items-center gap-4 mb-3">
-        <div class="text-sm font-bold">Legend</div>
-        <div class="flex items-center gap-2">
-          <template v-for="a in actions" :key="a">
-            <div class="flex items-center gap-2 text-xs">
-              <div :class="['w-4 h-4 rounded', gridActionColor[a]]"></div>
-              <div class="capitalize">{{ a }}</div>
-            </div>
-          </template>
-        </div>
-        <div class="ml-auto">
-          <button class="btn btn-sm bg-red-600 text-white px-3 py-1 rounded" @click="resetPolicy">
-            Reset Policy
-          </button>
-        </div>
+        <Button variant="destructive" @click="resetPolicy"> Reset Policy </Button>
       </div>
 
-      <table class="border-collapse">
-        <tbody>
-          <tr v-for="(row, r) in env.cells" :key="r">
-            <td v-for="(cell, c) in row" :key="c" class="p-0">
-              <div
-                @click="cycleAction(r, c)"
-                :title="`r:${r} c:${c} -> ${env.policy?.[r]?.[c] ?? 'stay'}`"
-                :class="[
-                  'w-10 h-10 flex items-center justify-center border cursor-pointer select-none',
-                  gridActionColor[env.policy?.[r]?.[c] ?? 'stay'] || 'bg-white/5',
-                ]"
-              >
-                <span class="text-[10px]">{{
-                  (env.policy?.[r]?.[c] ?? 'stay').slice(0, 1).toUpperCase()
-                }}</span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div>
+        <div class="text-sm font-bold mb-2">Grid</div>
+        <table class="border-collapse">
+          <tbody>
+            <tr v-for="(row, r) in env.cells" :key="r">
+              <td v-for="(cell, c) in row" :key="c" class="p-0">
+                <div
+                  :title="`r:${r} c:${c} -> ${cell}`"
+                  :class="[
+                    'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
+                    gridCellColor[cell],
+                  ]"
+                >
+                  <span>
+                    <component
+                      :is="gridActionIcon[env.policy?.[r]?.[c] ?? 'stay']"
+                      @click="cycleAction(r, c)"
+                      class="w-6 h-6 cursor-pointer"
+                    />
+                  </span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <div class="mt-2 text-xs text-muted-foreground">
-        Click a cell to cycle actions: stay → up → down → left → right
+        Click a cell to cycle actions: stay → right → down → left → up
       </div>
 
       <template v-if="errorMsg !== undefined">
         <div class="mt-2 text-sm text-red-500">{{ errorMsg }}</div>
       </template>
     </div>
-  </Empty>
+  </div>
 </template>
