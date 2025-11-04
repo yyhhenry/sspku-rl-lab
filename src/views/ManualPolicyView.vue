@@ -18,6 +18,17 @@ const debouncedEnv = refDebounced(env, 200)
 const errorMsg = ref<string>()
 
 // validate and persist
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { watchEffect } from 'vue'
 watchEffect(() => {
@@ -52,7 +63,21 @@ function resetPolicy() {
   <div class="flex justify-center">
     <div class="rounded-lg border p-4 bg-white/5 w-180">
       <div class="flex items-center justify-end gap-4 mb-3">
-        <Button variant="destructive" @click="resetPolicy"> Reset Policy </Button>
+        <AlertDialog>
+          <AlertDialogTrigger as-child>
+            <Button variant="destructive">Reset Policy</Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Reset Policy?</AlertDialogTitle>
+              <AlertDialogDescription> All cell actions will be reset. </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction @click="resetPolicy()"> Reset </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       <div class="flex justify-center">
