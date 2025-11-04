@@ -78,13 +78,13 @@ export function createDefaultGridEnv(): GridEnv {
   }
 }
 
-export function examplePolicy(
+export function getPolicyExamples(
   rows: number,
   cols: number,
 ): { name: string; policy: GridAction[][] }[] {
   const examples: { name: string; rows: number; cols: number; policy: GridAction[][] }[] = [
     {
-      name: 'Lab Example 1',
+      name: 'Policy 1',
       rows: 5,
       cols: 5,
       policy: [
@@ -96,7 +96,7 @@ export function examplePolicy(
       ] as const,
     },
     {
-      name: 'Lab Example 2',
+      name: 'Policy 2',
       rows: 5,
       cols: 5,
       policy: [
@@ -108,7 +108,7 @@ export function examplePolicy(
       ] as const,
     },
     {
-      name: 'Lab Example 3',
+      name: 'Policy 3',
       rows: 5,
       cols: 5,
       policy: Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 'right' as const)),

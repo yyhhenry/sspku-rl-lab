@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  getPolicyExamples,
   gridActionEnum,
   gridActionIcon,
   gridCellColor,
@@ -9,6 +10,7 @@ import {
   type GridEnv,
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
+import cloneDeep from 'lodash/cloneDeep'
 import { ref } from 'vue'
 import z from 'zod'
 
@@ -62,22 +64,35 @@ function resetPolicy() {
 <template>
   <div class="flex justify-center">
     <div class="rounded-lg border p-4 bg-white/5 w-180">
-      <div class="flex items-center justify-end gap-4 mb-3">
-        <AlertDialog>
-          <AlertDialogTrigger as-child>
-            <Button variant="destructive">Reset Policy</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reset Policy?</AlertDialogTitle>
-              <AlertDialogDescription> All cell actions will be reset. </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction @click="resetPolicy()"> Reset </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <div class="flex items-center justify-between gap-4 mb-3">
+        <div class="flex items-center">
+          <span class="text-muted-foreground">Examples:</span>
+          <Button
+            variant="link"
+            v-for="example of getPolicyExamples(env.rows, env.cols)"
+            :key="example.name"
+            @click="env.policy = cloneDeep(example.policy)"
+          >
+            {{ example.name }}
+          </Button>
+        </div>
+        <div class="flex items-center">
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button variant="destructive">Reset Policy</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Reset Policy?</AlertDialogTitle>
+                <AlertDialogDescription> All cell actions will be reset. </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction @click="resetPolicy()"> Reset </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
       <div class="flex justify-center">
@@ -89,7 +104,7 @@ function resetPolicy() {
                 <td v-for="(cell, c) in row" :key="c" class="p-0">
                   <div
                     @click="cycleAction(r, c)"
-                    :title="`r:${r} c:${c} -> ${cell}`"
+                    :title="`r:${r} c:${c} -> ${env.policy?.[r]?.[c] ?? 'stay'}`"
                     :class="[
                       'w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-2 hover:border-blue-400 border transition-all duration-150',
                       gridCellColor[cell],
