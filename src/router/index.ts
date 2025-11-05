@@ -1,5 +1,10 @@
+import EditGridView from '@/views/EditGridView.vue'
+import SettingsView from '@/views/SettingsView.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
+import EditPolicyView from '../views/EditPolicyView.vue'
 import HomeView from '../views/HomeView.vue'
+
+// Async loading causes lag on Cloudflare Pages, so we use direct imports here
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -12,17 +17,17 @@ const router = createRouter({
     {
       path: '/edit-grid',
       name: 'Edit Grid',
-      component: () => import('../views/EditGridView.vue'),
+      component: EditGridView,
     },
     {
       path: '/edit-policy',
       name: 'Edit Policy',
-      component: () => import('../views/EditPolicyView.vue'),
+      component: EditPolicyView,
     },
     {
       path: '/settings',
       name: 'Settings',
-      component: () => import('../views/SettingsView.vue'),
+      component: SettingsView,
     },
   ],
 })
