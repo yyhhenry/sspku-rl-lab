@@ -13,6 +13,7 @@ import { applyMatrixToVector } from '@/lib/tensor'
 import { cloneDeep } from 'es-toolkit'
 import { computed, ref, watch } from 'vue'
 import { Separator } from './ui/separator'
+import { useSidebar } from './ui/sidebar'
 
 const props = defineProps<{
   env: GridEnv
@@ -63,6 +64,8 @@ const page = computed({
     activeIteration.value = val - 1
   },
 })
+
+const { isMobile } = useSidebar()
 </script>
 <template>
   <div>
@@ -95,7 +98,7 @@ const page = computed({
         </table>
       </div>
     </div>
-    <Pagination v-model:page="page" :items-per-page="1" :total="pageCount" :show-edges="true">
+    <Pagination v-model:page="page" :items-per-page="1" :total="pageCount" :show-edges="!isMobile">
       <PaginationContent v-slot="{ items }">
         <PaginationPrevious />
 
