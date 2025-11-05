@@ -27,7 +27,7 @@ const md = computed(() => {
 })
 </script>
 <template>
-  <div class="w-full overflow-x-auto">
+  <div>
     <MarkedView :markdown="md" />
   </div>
 </template>

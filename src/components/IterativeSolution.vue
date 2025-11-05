@@ -65,7 +65,7 @@ const page = computed({
 })
 </script>
 <template>
-  <div class="w-full overflow-x-auto">
+  <div>
     <MarkedView :markdown="'$v_{k+1} = r_\\pi + \\gamma P_\\pi v_k$'" />
     <div v-if="valueTensor" class="my-2 flex items-center gap-4 justify-center">
       <span class="font-bold">Iteration {{ page }}</span>

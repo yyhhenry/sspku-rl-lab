@@ -13,6 +13,7 @@ import {
 import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
 import { Separator } from '@/components/ui/separator'
+import { useSidebar } from '@/components/ui/sidebar'
 import {
   createDefaultGridEnv,
   gridCellColor,
@@ -89,12 +90,13 @@ function resetGridEnv() {
     cols: env.value.cols,
   }
 }
+const { isMobile } = useSidebar()
 </script>
 
 <template>
   <div class="flex justify-center">
-    <div class="rounded-lg border p-4 bg-white/5 w-180">
-      <div class="flex gap-4 items-center justify-between">
+    <div class="rounded-lg border p-4 bg-white/5 w-180 max-w-full overflow-x-auto">
+      <div :class="['flex gap-4 items-center justify-between', isMobile ? 'flex-col-reverse' : '']">
         <div class="flex items-center gap-4">
           <span class="flex items-center gap-2">
             <label class="text-sm">Rows</label>
@@ -134,7 +136,7 @@ function resetGridEnv() {
         </div>
       </div>
 
-      <div class="mt-4 flex justify-between gap-6">
+      <div :class="['mt-4 flex gap-6', isMobile ? 'flex-col' : 'justify-between']">
         <!-- reward editor -->
         <div>
           <div class="text-sm font-bold mb-2">Rewards</div>
@@ -164,7 +166,7 @@ function resetGridEnv() {
           </div>
         </div>
         <!-- preview table -->
-        <div>
+        <div :class="[isMobile ? 'flex flex-col items-center' : '']">
           <div class="text-sm font-bold mb-2">Preview</div>
           <table class="border-collapse">
             <tbody>

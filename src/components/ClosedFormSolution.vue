@@ -58,7 +58,7 @@ const md = computed(() => {
 })
 </script>
 <template>
-  <div class="w-full overflow-x-auto">
+  <div>
     <MarkedView :markdown="'$v_\\pi = (I - \\gamma P_\\pi)^{-1} r_\\pi$'" />
     <div class="flex justify-center">
       <div>

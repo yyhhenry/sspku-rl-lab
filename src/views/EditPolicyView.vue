@@ -4,6 +4,7 @@ import IterativeSolution from '@/components/IterativeSolution.vue'
 import PolicyCommonData from '@/components/PolicyCommonData.vue'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useSidebar } from '@/components/ui/sidebar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   getPolicyExamples,
@@ -42,12 +43,13 @@ function cycleAction(r: number, c: number) {
   if (!env.value.policy || !env.value.policy[r]) return
   env.value.policy[r]![c] = next as GridAction
 }
+const { isMobile } = useSidebar()
 </script>
 
 <template>
   <div class="flex justify-center">
-    <div class="rounded-lg border p-4 bg-white/5 w-180">
-      <div class="flex items-center gap-2 mb-4">
+    <div class="rounded-lg border p-4 bg-white/5 w-180 max-w-full">
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
         <span class="text-muted-foreground">Examples:</span>
         <Button
           variant="link"
@@ -95,7 +97,7 @@ function cycleAction(r: number, c: number) {
 
       <Separator class="my-4" />
 
-      <Tabs default-value="common-data" class="w-full">
+      <Tabs default-value="common-data" class="w-full overflow-x-auto">
         <TabsList>
           <TabsTrigger value="common-data"> Common Data </TabsTrigger>
           <TabsTrigger value="closed-form"> Closed-form Solution </TabsTrigger>

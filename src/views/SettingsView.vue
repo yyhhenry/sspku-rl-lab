@@ -12,7 +12,7 @@ const { store: mode } = useColorMode()
 </script>
 <template>
   <div class="flex justify-center">
-    <div class="rounded-lg border p-4 bg-white/5 w-180">
+    <div class="rounded-lg border p-4 bg-white/5 max-w-full w-180 overflow-x-auto">
       <div class="flex items-center gap-4">
         <span class="text-muted-foreground">Color Mode:</span>
         <DropdownMenu>
