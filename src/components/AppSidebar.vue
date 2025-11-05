@@ -21,6 +21,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import {
   Bot,
@@ -49,6 +50,8 @@ const navMain = ref([
     items: [{ title: 'Edit Policy', url: '/edit-policy' }],
   },
 ])
+
+const { open } = useSidebar()
 </script>
 
 <template>
@@ -82,7 +85,13 @@ const navMain = ref([
           >
             <SidebarMenuItem>
               <CollapsibleTrigger as-child>
-                <SidebarMenuButton :tooltip="navSection.title" class="truncate">
+                <SidebarMenuButton
+                  :tooltip="navSection.title"
+                  class="truncate"
+                  @click="
+                    !open && navSection.items[0]?.url && $router.push(navSection.items[0].url)
+                  "
+                >
                   <component :is="navSection.icon" v-if="navSection.icon" />
                   <span>{{ navSection.title }}</span>
                   <ChevronRight
