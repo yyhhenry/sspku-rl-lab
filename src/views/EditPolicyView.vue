@@ -16,7 +16,7 @@ import {
   type GridEnv,
 } from '@/lib/grid-env'
 import { refDebounced } from '@vueuse/core'
-import cloneDeep from 'lodash/cloneDeep'
+import { cloneDeep } from 'es-toolkit'
 import { ref, watchEffect } from 'vue'
 import { toast } from 'vue-sonner'
 import z from 'zod'

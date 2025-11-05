@@ -22,8 +22,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.0",
+    "es-toolkit": "^1.41.0",
     "highlight.js": "^11.11.1",
-    "lodash": "^4.17.21",
     "lucide-vue-next": "^0.552.0",
     "marked": "^16.4.1",
     "marked-katex-extension": "^5.1.5",
@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.2",
-    "@types/lodash": "^4.17.20",
     "@types/node": "^22.18.11",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vitejs/plugin-vue-jsx": "^5.1.1",

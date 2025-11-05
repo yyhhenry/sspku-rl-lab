@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/pagination'
 import { getRewardTensor, getTransitionTensor, gridCellColor, type GridEnv } from '@/lib/grid-env'
 import { applyMatrixToVector } from '@/lib/tensor'
-import cloneDeep from 'lodash/cloneDeep'
+import { cloneDeep } from 'es-toolkit'
 import { ChevronsRight } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { Separator } from './ui/separator'
