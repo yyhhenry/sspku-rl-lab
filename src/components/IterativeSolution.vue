@@ -11,7 +11,6 @@ import {
 import { getRewardTensor, getTransitionTensor, gridCellColor, type GridEnv } from '@/lib/grid-env'
 import { applyMatrixToVector } from '@/lib/tensor'
 import { cloneDeep } from 'es-toolkit'
-import { ChevronsRight } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 import { Separator } from './ui/separator'
 
@@ -96,7 +95,7 @@ const page = computed({
         </table>
       </div>
     </div>
-    <Pagination v-model:page="page" :items-per-page="1" :total="pageCount" :sibling-count="3">
+    <Pagination v-model:page="page" :items-per-page="1" :total="pageCount" :show-edges="true">
       <PaginationContent v-slot="{ items }">
         <PaginationPrevious />
 
@@ -112,14 +111,6 @@ const page = computed({
         </template>
 
         <PaginationNext />
-        <ChevronsRight
-          @click="page = pageCount"
-          :class="[
-            page === pageCount
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'hover:text-main-600 cursor-pointer',
-          ]"
-        />
       </PaginationContent>
     </Pagination>
   </div>
