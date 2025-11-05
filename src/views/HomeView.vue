@@ -16,7 +16,7 @@ const openGitHub = () => {
     </EmptyHeader>
     <EmptyTitle>SSPKU RL Lab</EmptyTitle>
     <EmptyDescription>
-      <p>北大软微强化学习算法在线Lab</p>
+      <p>SSPKU Reinforcement Learning Lab</p>
       <p>
         <Button variant="link" @click="openGitHub"> yyhhenry/sspku-rl-lab </Button>
       </p>
