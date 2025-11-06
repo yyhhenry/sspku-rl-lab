@@ -22,7 +22,7 @@ const md = computed(() => {
     `$(r_\\pi)^T =$`,
     `${displayMatrix([rewardTensor.value])}`,
     `$P_\\pi = $`,
-    `<pre>${displayMatrix(transitionTensor.value, 0, ' ')}</pre>`,
+    `\`\`\`txt\n${displayMatrix(transitionTensor.value, 0, ' ')}\n\`\`\``,
   ].join('\n\n')
 })
 </script>

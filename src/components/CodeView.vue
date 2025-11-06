@@ -3,6 +3,8 @@ import hljs from 'highlight.js/lib/common'
 import 'highlight.js/styles/github-dark.min.css'
 import { computed } from 'vue'
 import { toast } from 'vue-sonner'
+import { Button } from './ui/button'
+import { Separator } from './ui/separator'
 
 const props = defineProps<{
   code: string
@@ -16,13 +18,12 @@ const onCopy = async () => {
 }
 </script>
 <template>
-  <div class="hljs pa-2" style="border-radius: 1em">
-    <div class="d-flex align-center">
-      <span class="pa-2">{{ lang }}</span>
-      <v-spacer></v-spacer>
-      <v-btn variant="plain" icon="mdi-content-copy" @click="onCopy"></v-btn>
+  <div class="hljs p-2 rounded-md border">
+    <div class="flex items-center justify-between">
+      <span class="p-2">{{ lang }}</span>
+      <Button variant="ghost" @click="onCopy">Copy</Button>
     </div>
-    <v-divider></v-divider>
+    <Separator class="my-2" />
     <pre
       class="p-1 overflow-x-auto"
     ><code :class="`language-${language}`" v-html="highlighted"></code></pre>

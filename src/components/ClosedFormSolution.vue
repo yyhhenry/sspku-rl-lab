@@ -53,7 +53,7 @@ const md = computed(() => {
     `$v_\\pi = $`,
     `${displayMatrix([valueTensor.value], 4, ' ')}`,
     `$(I - \\gamma P_\\pi)^{-1} = $`,
-    `<pre>${displayMatrix(inverseTensor.value, 2, ' ')}</pre>`,
+    `\`\`\`txt\n${displayMatrix(inverseTensor.value, 2, ' ')}\n\`\`\``,
   ].join('\n\n')
 })
 </script>
