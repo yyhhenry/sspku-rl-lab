@@ -19,10 +19,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="#">
-                <Grid2x2Check />
+              <Link to="/" className="py-5">
+                <span className="text-lg">
+                  <Grid2x2Check />
+                </span>
                 <span className="text-base font-bold">SSPKU RL Lab</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
