@@ -1,6 +1,16 @@
-import { createContext, useContext, useEffect, useState } from "react";
-
-type Theme = "dark" | "light" | "system";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useZodStorage } from "@/lib/zod-storage";
+import { createContext, useContext, useEffect } from "react";
+import z from "zod";
+export const themeOptions = ["dark", "light", "system"] as const;
+export const ThemeSchema = z.enum(themeOptions);
+export type Theme = z.infer<typeof ThemeSchema>;
 
 type ThemeProviderProps = {
   children: React.ReactNode;
@@ -23,11 +33,12 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = "system",
-  storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+  const [theme, setTheme] = useZodStorage(
+    "theme",
+    ThemeSchema,
+    () => defaultTheme
   );
 
   useEffect(() => {
@@ -48,16 +59,8 @@ export function ThemeProvider({
     root.classList.add(theme);
   }, [theme]);
 
-  const value = {
-    theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
-      setTheme(theme);
-    },
-  };
-
   return (
-    <ThemeProviderContext.Provider {...props} value={value}>
+    <ThemeProviderContext.Provider {...props} value={{ theme, setTheme }}>
       {children}
     </ThemeProviderContext.Provider>
   );
@@ -71,3 +74,24 @@ export const useTheme = () => {
 
   return context;
 };
+
+export function ThemeSelect() {
+  const { theme, setTheme } = useTheme();
+  const updateTheme = (newValue: string) => {
+    const parsed = ThemeSchema.safeParse(newValue);
+    if (!parsed.success) return;
+    setTheme(parsed.data);
+  };
+  return (
+    <Select value={theme} onValueChange={updateTheme}>
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Theme" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="light">Light</SelectItem>
+        <SelectItem value="dark">Dark</SelectItem>
+        <SelectItem value="system">System</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}

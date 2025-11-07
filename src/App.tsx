@@ -11,8 +11,9 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
-import { HashRouter, Route, Routes } from "react-router-dom";
-import { HomePage } from "./pages/HomePage";
+import { Route, Routes } from "react-router-dom";
+import { HomePage } from "./pages/home-page";
+import { SettingsPage } from "./pages/settings-page";
 
 export function App() {
   return (
@@ -36,11 +37,10 @@ export function App() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <HashRouter>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-            </Routes>
-          </HashRouter>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
         </div>
       </SidebarInset>
     </SidebarProvider>
