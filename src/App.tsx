@@ -50,6 +50,11 @@ export function App() {
             path="/settings"
             element={withHeader("Settings", <SettingsPage />)}
           />
+          <Route path="/grid-env" element={withHeader("Grid Env", <></>)} />
+          <Route
+            path="/bellman-equations"
+            element={withHeader("Bellman Equations", <></>)}
+          />
         </Routes>
       </SidebarInset>
     </SidebarProvider>
