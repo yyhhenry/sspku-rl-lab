@@ -1,5 +1,5 @@
 import { GridView } from "@/components/grid-view";
-import { NumberInput } from "@/components/refined-input";
+import { InputOnBlur } from "@/components/input-on-blur";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -49,23 +49,23 @@ export function EnvironmentPage() {
         <CardContent className="overflow-x-auto">
           <div className="flex flex-col items-center gap-4 w-fit min-w-full">
             <div className="flex items-center gap-2">
-              <NumberInput
+              <InputOnBlur
                 value={gridEnv.rows}
                 setValue={v => {
                   setGridEnv({
                     ...gridEnv,
-                    rows: refineSize(v),
+                    rows: refineSize(Number(v)),
                   });
                 }}
                 className="w-20"
               />
               <span>x</span>
-              <NumberInput
+              <InputOnBlur
                 value={gridEnv.cols}
                 setValue={v => {
                   setGridEnv({
                     ...gridEnv,
-                    cols: refineSize(v),
+                    cols: refineSize(Number(v)),
                   });
                 }}
                 className="w-20"

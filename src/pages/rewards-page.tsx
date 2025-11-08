@@ -1,4 +1,4 @@
-import { NumberInput } from "@/components/refined-input";
+import { InputOnBlur } from "@/components/input-on-blur";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,9 +35,10 @@ export function RewardsPage() {
           <div className="flex flex-col items-center gap-2 w-fit min-w-full">
             <div className="flex items-center gap-2">
               <label className="w-28 text-sm">Gamma</label>
-              <NumberInput
+              <InputOnBlur
                 value={gridReward.gamma}
-                setValue={v => {
+                setValue={s => {
+                  let v = Number(s);
                   if (!isFinite(v)) v = 0.9;
                   if (v < 0.01) v = 0.01;
                   if (v > 0.99) v = 0.99;

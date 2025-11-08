@@ -1,15 +1,13 @@
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
 
-export function NumberInput({
+export function InputOnBlur({
   value,
   setValue,
-  step,
   ...props
 }: {
-  value: number;
-  setValue: (v: number) => void;
-  step?: number;
+  value: number | string;
+  setValue: (v: string) => void;
 } & React.ComponentProps<typeof Input>) {
   const [inputValue, setInputValue] = useState(value.toString());
   useEffect(() => {
@@ -17,11 +15,9 @@ export function NumberInput({
   }, [value]);
   return (
     <Input
-      type="number"
       value={inputValue}
       onChange={e => setInputValue(e.target.value)}
-      onBlur={() => setValue(Number(inputValue))}
-      step={step}
+      onBlur={() => setValue(inputValue)}
       {...props}
     />
   );
