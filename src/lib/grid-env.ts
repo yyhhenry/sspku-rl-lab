@@ -214,20 +214,6 @@ export function getPolicyExamples(
         ],
       },
     },
-    {
-      name: "Policy 4",
-      rows: 5,
-      cols: 5,
-      policy: {
-        actions: [
-          ["right", "left", "left", "up", "up"],
-          ["down", "idle", "right", "down", "right"],
-          ["left", "right", "down", "left", "idle"],
-          ["idle", "down", "up", "up", "right"],
-          ["idle", "right", "idle", "right", "idle"],
-        ],
-      },
-    },
   ];
   return [
     {
