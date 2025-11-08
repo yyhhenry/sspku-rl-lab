@@ -55,7 +55,7 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
       `$(r_\\pi)^T =$`,
       `${displayMatrix([rewardTensor])}`,
       `$P_\\pi = $`,
-      `\`\`\`txt\n${displayMatrix(transitionTensor, 0, " ")}\n\`\`\``,
+      `\`\`\`plaintext\n${displayMatrix(transitionTensor, 0, " ")}\n\`\`\``,
     ].join("\n\n");
   }, [reward, rewardTensor, transitionTensor]);
 
