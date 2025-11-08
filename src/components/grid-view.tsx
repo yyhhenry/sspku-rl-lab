@@ -21,7 +21,7 @@ export function GridView({
                   <div
                     onClick={() => onClick?.(r, c)}
                     className={twMerge(
-                      "w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-3 hover:border-blue-400 border transition-all duration-150",
+                      "w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-3 hover:border-blue-400 transition-border duration-150",
                       gridCellColor[safeGetCell(env, r, c)]
                     )}
                   >
