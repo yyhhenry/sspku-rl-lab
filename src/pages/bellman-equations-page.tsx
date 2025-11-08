@@ -3,6 +3,7 @@ import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getPolicyExamples,
@@ -26,7 +27,7 @@ import {
   InvertMatrix,
   matrixAdd,
 } from "@/lib/tensor";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface BellmanEquationProps {
@@ -104,16 +105,14 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
 
   const md = useMemo(() => {
     return [
+      "$v_\\pi = (I - \\gamma P_\\pi)^{-1} r_\\pi$",
       `$v_\\pi = $`,
       `${displayMatrix([valueTensor], 4, " ")}`,
-      `$(I - \\gamma P_\\pi)^{-1} = $`,
-      `\`\`\`txt\n${displayMatrix(inverseTensor, 2, " ")}\n\`\`\``,
     ].join("\n\n");
-  }, [inverseTensor, valueTensor]);
+  }, [valueTensor]);
 
   return (
     <div className="m-2">
-      <Markdown content={"$v_\\pi = (I - \\gamma P_\\pi)^{-1} r_\\pi$"} />
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
           <GridView
@@ -145,7 +144,85 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
     [env, reward, policy]
   );
 
-  return <div className="m-2"></div>;
+  const [iters, setIters] = useState<{
+    activeIter: number;
+    iters: { value: number[]; maxDiff: number }[];
+  }>({
+    activeIter: 0,
+    iters: [{ value: rewardTensor, maxDiff: Infinity }],
+  });
+
+  useEffect(() => {
+    const iters: { value: number[]; maxDiff: number }[] = [
+      { value: rewardTensor, maxDiff: Infinity },
+    ];
+    while (iters.length < 100 && iters[iters.length - 1]!.maxDiff > 0.001) {
+      const prev = iters[iters.length - 1]!.value;
+      const next = applyMatrixToVector(transitionTensor, prev).map(
+        (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val
+      );
+      const maxDiff = next.reduce((maxErr, val, idx) => {
+        const err = Math.abs(val - (prev[idx] ?? 0));
+        return err > maxErr ? err : maxErr;
+      }, 0);
+      iters.push({ value: next, maxDiff });
+    }
+    setIters({
+      activeIter: iters.length - 1,
+      iters,
+    });
+  }, [rewardTensor, transitionTensor, reward]);
+
+  const valueTensor = useMemo(() => {
+    return iters.iters[iters.activeIter]?.value ?? rewardTensor;
+  }, [iters, rewardTensor]);
+
+  const md = useMemo(() => {
+    const k = iters.activeIter;
+    return [
+      "$v_{k+1} = r_\\pi + \\gamma P_\\pi v_k$",
+      k === 0
+        ? ""
+        : `$max{\\|v_{${k}} - v_{${k - 1}}\\|} = ${(
+            iters.iters[k]?.maxDiff ?? 0
+          ).toFixed(6)}$`,
+      `$v_{${iters.activeIter}} = $`,
+      `${displayMatrix([valueTensor], 4, " ")}`,
+    ].join("\n\n");
+  }, [valueTensor, iters]);
+
+  return (
+    <div className="m-2">
+      <div className="mb-4 flex items-center justify-center">
+        <div className="m-2">Iteration {iters.activeIter}:</div>
+        <div className="w-sm">
+          <Slider
+            value={[iters.activeIter]}
+            onValueChange={val => setIters({ ...iters, activeIter: val[0] })}
+            min={0}
+            max={iters.iters.length - 1}
+            step={1}
+          />
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
+          <GridView
+            className="my-2"
+            env={env}
+            cell={(r, c) => {
+              return (
+                <span className="text-xs">
+                  {valueTensor[r * env.cols + c]?.toFixed(1) ?? ""}
+                </span>
+              );
+            }}
+          />
+        </div>
+      </div>
+      <Markdown content={md} />
+    </div>
+  );
 }
 
 export function BellmanEquationsPage() {
