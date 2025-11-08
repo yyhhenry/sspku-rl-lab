@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import { safeGetCell, type GridEnv } from "./grid-env";
 import { applyMatrixToVector, identityMatrix, matrixAdd } from "./tensor";
+import { createZodStore } from "./zod-store";
 
 export const gridActionEnum = ["stay", "right", "down", "left", "up"] as const;
 export const GridActionSchema = z.enum(gridActionEnum);
@@ -35,15 +36,8 @@ export const GridPolicySchema = z.object({
   policy: z.array(z.array(GridActionSchema)),
 });
 export type GridPolicy = z.infer<typeof GridPolicySchema>;
-export function createDefaultGridPolicy(
-  rows: number,
-  cols: number
-): GridPolicy {
-  return {
-    policy: Array.from({ length: rows }, () =>
-      Array.from({ length: cols }, () => "stay" as const)
-    ),
-  };
+export function createDefaultGridPolicy(): GridPolicy {
+  return { policy: [] };
 }
 
 export function getPolicyExamples(
@@ -188,3 +182,9 @@ export function closedFormSolution(env: GridEnv, policy: GridPolicy): number[] {
   const A = matrixAdd(I, P, { alpha: 1, beta: -gamma });
   return applyMatrixToVector(A, R);
 }
+
+export const useGridPolicy = createZodStore(
+  "grid-policy",
+  GridPolicySchema,
+  createDefaultGridPolicy
+);

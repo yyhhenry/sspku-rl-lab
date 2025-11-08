@@ -11,7 +11,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
-import { Route, Routes } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { useThemeEffect } from "./components/theme-provider";
 import { HomePage } from "./pages/home-page";
 import { SettingsPage } from "./pages/settings-page";
 
@@ -40,23 +41,26 @@ function withHeader(title: string, page: React.ReactNode) {
   );
 }
 export function App() {
+  useThemeEffect();
   return (
-    <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <Routes>
-          <Route path="/" element={withHeader("Home", <HomePage />)} />
-          <Route
-            path="/settings"
-            element={withHeader("Settings", <SettingsPage />)}
-          />
-          <Route path="/grid-env" element={withHeader("Grid Env", <></>)} />
-          <Route
-            path="/bellman-equations"
-            element={withHeader("Bellman Equations", <></>)}
-          />
-        </Routes>
-      </SidebarInset>
-    </SidebarProvider>
+    <HashRouter>
+      <SidebarProvider>
+        <AppSidebar variant="inset" />
+        <SidebarInset>
+          <Routes>
+            <Route path="/" element={withHeader("Home", <HomePage />)} />
+            <Route
+              path="/settings"
+              element={withHeader("Settings", <SettingsPage />)}
+            />
+            <Route path="/grid-env" element={withHeader("Grid Env", <></>)} />
+            <Route
+              path="/bellman-equations"
+              element={withHeader("Bellman Equations", <></>)}
+            />
+          </Routes>
+        </SidebarInset>
+      </SidebarProvider>
+    </HashRouter>
   );
 }

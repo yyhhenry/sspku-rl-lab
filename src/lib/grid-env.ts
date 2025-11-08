@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createZodStore } from "./zod-store";
 
 export const gridCellEnum = ["empty", "forbidden", "goal"] as const;
 export const GridCellSchema = z.enum(gridCellEnum);
@@ -55,3 +56,9 @@ export const gridCellColor: Record<GridCell, string> = {
 export function safeGetCell(env: GridEnv, r: number, c: number): GridCell {
   return env.cells[r]?.[c] ?? "empty";
 }
+
+export const useGridEnv = createZodStore(
+  "grid-env",
+  GridEnvSchema,
+  createDefaultGridEnv
+);
