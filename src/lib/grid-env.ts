@@ -6,11 +6,11 @@ export type GridCell = z.infer<typeof GridCellSchema>;
 export const GridRewardSchema = z.object({
   gamma: z.number().min(0.01).max(0.99),
   border: z.number(),
-  cell: {
+  cell: z.object({
     empty: z.number(),
     forbidden: z.number(),
     goal: z.number(),
-  },
+  }),
 });
 export type GridReward = z.infer<typeof GridRewardSchema>;
 export const GridSizeIntSchema = z.number().int().min(1).max(10);
