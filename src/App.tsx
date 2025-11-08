@@ -1,4 +1,4 @@
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, routes } from "@/components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -53,11 +53,13 @@ export function App() {
               path="/settings"
               element={withHeader("Settings", <SettingsPage />)}
             />
-            <Route path="/grid-env" element={withHeader("Grid Env", <></>)} />
-            <Route
-              path="/bellman-equations"
-              element={withHeader("Bellman Equations", <></>)}
-            />
+            {routes.map(route => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={withHeader(route.name, route.page && <route.page />)}
+              />
+            ))}
           </Routes>
         </SidebarInset>
       </SidebarProvider>

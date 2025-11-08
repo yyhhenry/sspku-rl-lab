@@ -9,22 +9,38 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Grid, Grid2x2Check, Settings, Workflow } from "lucide-react";
+import { EnvironmentPage } from "@/pages/environment-page";
+import { RewardsPage } from "@/pages/rewards-page";
+import { Award, Grid, Grid2x2Check, Settings, Workflow } from "lucide-react";
 import { Link } from "react-router-dom";
 
+export interface RouteItem {
+  path: string;
+  name: string;
+  icon?: React.ElementType;
+  page?: React.ElementType;
+}
+export const routes: RouteItem[] = [
+  {
+    path: "/environment",
+    name: "Environment",
+    icon: Grid,
+    page: EnvironmentPage,
+  },
+  {
+    path: "/rewards",
+    name: "Rewards",
+    icon: Award,
+    page: RewardsPage,
+  },
+  {
+    path: "/bellman-equations",
+    name: "Bellman Equations",
+    icon: Workflow,
+  },
+] as const;
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const items = [
-    {
-      title: "Grid Env",
-      url: "/grid-env",
-      icon: Grid,
-    },
-    {
-      title: "Bellman Equations",
-      url: "/bellman-equations",
-      icon: Workflow,
-    },
-  ] as const;
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -45,12 +61,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarGroup>
           <SidebarGroupContent className="flex flex-col gap-2">
             <SidebarMenu>
-              {items.map(item => (
-                <SidebarMenuItem key={item.title}>
+              {routes.map(route => (
+                <SidebarMenuItem key={route.path}>
                   <SidebarMenuButton asChild>
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
+                    <Link to={route.path}>
+                      {route.icon && <route.icon />}
+                      <span>{route.name}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
