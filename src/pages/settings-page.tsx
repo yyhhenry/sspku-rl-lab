@@ -6,7 +6,7 @@ export function SettingsPage() {
     <div className="flex justify-center">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>Settings</CardTitle>
+          <CardTitle>Preferences</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="flex items-center gap-4">
