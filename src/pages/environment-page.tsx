@@ -1,13 +1,15 @@
 import { GridView } from "@/components/grid-view";
-import { InputOnBlur } from "@/components/input-on-blur";
+import { InputOnBlur } from "@/components/refined-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   getGridExamples,
+  gridCellColor,
   gridCellEnum,
   safeGetCell,
   useGridEnv,
 } from "@/lib/grid-env";
+import { twMerge } from "tailwind-merge";
 
 export function EnvironmentPage() {
   const [gridEnv, setGridEnv] = useGridEnv();
@@ -72,8 +74,19 @@ export function EnvironmentPage() {
               />
             </div>
             <GridView env={gridEnv} onClick={cycleCell} />
-            <span className="mt-2 text-xs text-muted-foreground">
-              Click a cell to cycle: empty → forbidden → goal
+            <span className="flex items-center flex-wrap gap-1 mt-2 text-xs text-muted-foreground">
+              <span>Click to cycle:</span>
+              {gridCellEnum.map(cell => (
+                <>
+                  <div
+                    className={twMerge(
+                      "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
+                      gridCellColor[cell]
+                    )}
+                  />
+                  <span className="capitalize">{cell}</span>
+                </>
+              ))}
             </span>
           </div>
         </CardContent>

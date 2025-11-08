@@ -1,4 +1,4 @@
-import { InputOnBlur } from "@/components/input-on-blur";
+import { InputOnBlur } from "@/components/refined-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,7 +74,7 @@ export function RewardsPage() {
                 <div className="w-28 text-sm capitalize flex items-center gap-2">
                   <div
                     className={twMerge(
-                      "inline-block w-4 h-4 ml-2 rounded-full",
+                      "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
                       gridCellColor[cell]
                     )}
                   />
