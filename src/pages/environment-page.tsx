@@ -1,4 +1,5 @@
 import { GridView } from "@/components/grid-view";
+import { NumberInput } from "@/components/refined-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -21,9 +22,16 @@ export function EnvironmentPage() {
     );
     setGridEnv({ ...gridEnv, cells: newCells });
   };
+  const refineSize = (v: number) => {
+    v = Math.floor(v);
+    if (!isFinite(v)) v = 5;
+    if (v < 1) v = 1;
+    if (v > 10) v = 10;
+    return v;
+  };
   return (
     <div className="flex justify-center">
-      <Card className="w-full max-w-xl">
+      <Card className="w-full max-w-lg">
         <CardHeader>
           <div className="flex items-center">
             <span className="text-muted-foreground">Examples:</span>
@@ -38,9 +46,32 @@ export function EnvironmentPage() {
             ))}
           </div>
         </CardHeader>
-        <CardContent>
-          <GridView env={gridEnv} onClick={cycleCell} />
-          <div className="flex justify-center">
+        <CardContent className="overflow-x-auto">
+          <div className="flex flex-col items-center gap-4 w-fit min-w-full">
+            <div className="flex items-center gap-2">
+              <NumberInput
+                value={gridEnv.rows}
+                setValue={v => {
+                  setGridEnv({
+                    ...gridEnv,
+                    rows: refineSize(v),
+                  });
+                }}
+                className="w-20"
+              />
+              <span>x</span>
+              <NumberInput
+                value={gridEnv.cols}
+                setValue={v => {
+                  setGridEnv({
+                    ...gridEnv,
+                    cols: refineSize(v),
+                  });
+                }}
+                className="w-20"
+              />
+            </div>
+            <GridView env={gridEnv} onClick={cycleCell} />
             <span className="mt-2 text-xs text-muted-foreground">
               Click a cell to cycle: empty → forbidden → goal
             </span>
