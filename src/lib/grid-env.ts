@@ -3,41 +3,24 @@ import { z } from "zod";
 export const gridCellEnum = ["empty", "forbidden", "goal"] as const;
 export const GridCellSchema = z.enum(gridCellEnum);
 export type GridCell = z.infer<typeof GridCellSchema>;
-export const GridRewardSchema = z
-  .object({
-    gamma: z.number().min(0.01).max(0.99),
-    border: z.number(),
-    cell: z.record(GridCellSchema, z.number()),
-  })
-  .refine(
-    data => {
-      return gridCellEnum.every(cellType => cellType in data.cell);
-    },
-    {
-      message: "Reward mapping must include all cell types.",
-    }
-  );
+export const GridRewardSchema = z.object({
+  gamma: z.number().min(0.01).max(0.99),
+  border: z.number(),
+  cell: {
+    empty: z.number(),
+    forbidden: z.number(),
+    goal: z.number(),
+  },
+});
 export type GridReward = z.infer<typeof GridRewardSchema>;
 export const GridSizeIntSchema = z.number().int().min(1).max(10);
 export type GridSizeIntItem = z.infer<typeof GridSizeIntSchema>;
-export const GridEnvSchema = z
-  .object({
-    rows: GridSizeIntSchema,
-    cols: GridSizeIntSchema,
-    cells: z.array(z.array(GridCellSchema)),
-    reward: GridRewardSchema,
-  })
-  .refine(
-    data => {
-      return (
-        data.cells.length === data.rows &&
-        data.cells.every(row => row.length === data.cols)
-      );
-    },
-    {
-      message: "Cells dimensions must match rows and cols.",
-    }
-  );
+export const GridEnvSchema = z.object({
+  rows: GridSizeIntSchema,
+  cols: GridSizeIntSchema,
+  cells: z.array(z.array(GridCellSchema)),
+  reward: GridRewardSchema,
+});
 export type GridEnv = z.infer<typeof GridEnvSchema>;
 
 export function createDefaultGridEnv(): GridEnv {
