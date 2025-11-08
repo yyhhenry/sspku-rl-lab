@@ -1,7 +1,7 @@
 import { BellmanEquationsPage } from "@/pages/bellman-equations-page";
 import { EnvironmentPage } from "@/pages/environment-page";
 import { RewardsPage } from "@/pages/rewards-page";
-import { Grid, Lollipop, Workflow } from "lucide-react";
+import { Grid, Lollipop, SquarePi } from "lucide-react";
 
 export interface RouteItem {
   path: string;
@@ -25,7 +25,7 @@ export const routes: RouteItem[] = [
   {
     path: "/bellman-equations",
     name: "Bellman Equations",
-    icon: Workflow,
+    icon: SquarePi,
     page: BellmanEquationsPage,
   },
 ] as const;
