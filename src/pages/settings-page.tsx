@@ -32,7 +32,7 @@ function ThemeSelect() {
 export function SettingsPage() {
   return (
     <div className="flex justify-center">
-      <Card className="w-full max-w-lg">
+      <Card className="w-full max-w-xl">
         <CardHeader>
           <CardTitle>Preferences</CardTitle>
         </CardHeader>

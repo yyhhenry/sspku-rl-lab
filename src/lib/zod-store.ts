@@ -33,6 +33,7 @@ export function createZodStore<T>(
         toast.error(
           `Failed to retrieve ${key}: ${z.prettifyError(parsed.error)}`
         );
+        setStored({ value: createDefault() });
         return createDefault();
       }
     };

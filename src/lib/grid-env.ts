@@ -16,7 +16,23 @@ export const GridEnvSchema = z.object({
 });
 export type GridEnv = z.infer<typeof GridEnvSchema>;
 
-export function getGridExamples(): { name: string; env: GridEnv }[] {
+export function randomGrid(rows: number, cols: number): GridEnv {
+  const cells: GridCell[][] = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () =>
+      Math.random() < 0.7 ? "empty" : "forbidden"
+    )
+  );
+  const goalPos = [
+    Math.floor(Math.random() * rows),
+    Math.floor(Math.random() * cols),
+  ] as const;
+  cells[goalPos[0]]![goalPos[1]] = "goal";
+  return { rows, cols, cells };
+}
+
+export function getGridExamples(
+  curEnv?: GridEnv
+): { name: string; env: GridEnv }[] {
   return [
     {
       name: "Tiny Grid",
@@ -29,6 +45,14 @@ export function getGridExamples(): { name: string; env: GridEnv }[] {
         ],
       },
     },
+    ...(curEnv === undefined
+      ? []
+      : [
+          {
+            name: "Random Grid",
+            env: randomGrid(curEnv.rows, curEnv.cols),
+          },
+        ]),
     {
       name: "Example 1",
       env: {
@@ -109,21 +133,21 @@ export const useGridReward = createZodStore(
 );
 
 // Grid Policy
-export const gridActionEnum = ["stay", "right", "down", "left", "up"] as const;
+export const gridActionEnum = ["idle", "right", "down", "left", "up"] as const;
 export const GridActionSchema = z.enum(gridActionEnum);
 export type GridAction = z.infer<typeof GridActionSchema>;
 export const actionDeltas: Record<
   GridAction,
   { deltaR: number; deltaC: number }
 > = {
-  stay: { deltaR: 0, deltaC: 0 },
+  idle: { deltaR: 0, deltaC: 0 },
   right: { deltaR: 0, deltaC: 1 },
   down: { deltaR: 1, deltaC: 0 },
   left: { deltaR: 0, deltaC: -1 },
   up: { deltaR: -1, deltaC: 0 },
 };
 export const gridActionIcon: Record<GridAction, React.ElementType> = {
-  stay: Dot,
+  idle: Dot,
   up: MoveUp,
   down: MoveDown,
   left: MoveLeft,
@@ -157,7 +181,7 @@ export function getPolicyExamples(
           ["right", "right", "right", "down", "down"],
           ["up", "up", "right", "down", "down"],
           ["up", "left", "down", "right", "down"],
-          ["up", "right", "stay", "left", "down"],
+          ["up", "right", "idle", "left", "down"],
           ["up", "right", "up", "left", "left"],
         ],
       },
@@ -171,7 +195,7 @@ export function getPolicyExamples(
           ["right", "right", "right", "right", "down"],
           ["up", "up", "right", "right", "down"],
           ["up", "left", "down", "right", "down"],
-          ["up", "right", "stay", "left", "down"],
+          ["up", "right", "idle", "left", "down"],
           ["up", "right", "up", "left", "left"],
         ],
       },
@@ -197,22 +221,36 @@ export function getPolicyExamples(
       policy: {
         actions: [
           ["right", "left", "left", "up", "up"],
-          ["down", "stay", "right", "down", "right"],
-          ["left", "right", "down", "left", "stay"],
-          ["stay", "down", "up", "up", "right"],
-          ["stay", "right", "stay", "right", "stay"],
+          ["down", "idle", "right", "down", "right"],
+          ["left", "right", "down", "left", "idle"],
+          ["idle", "down", "up", "up", "right"],
+          ["idle", "right", "idle", "right", "idle"],
         ],
       },
     },
   ];
   return [
     {
-      name: "All Stay",
+      name: "Idle Only",
       rows,
       cols,
       policy: {
         actions: Array.from({ length: rows }, () =>
-          Array.from({ length: cols }, () => "stay" as const)
+          Array.from({ length: cols }, () => "idle" as const)
+        ),
+      },
+    },
+    {
+      name: "Random",
+      rows,
+      cols,
+      policy: {
+        actions: Array.from({ length: rows }, () =>
+          Array.from(
+            { length: cols },
+            () =>
+              gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)]
+          )
         ),
       },
     },
@@ -227,7 +265,7 @@ export function safeGetCellAction(
   r: number,
   c: number
 ): GridAction {
-  return policy.actions[r]?.[c] ?? "stay";
+  return policy.actions[r]?.[c] ?? "idle";
 }
 
 export const useGridPolicy = createZodStore(

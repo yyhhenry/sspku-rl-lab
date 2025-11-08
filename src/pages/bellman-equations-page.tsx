@@ -42,11 +42,6 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
     [env, reward, policy]
   );
 
-  const transitionTensor = useMemo(
-    () => getTransitionTensor(env, reward, policy),
-    [env, reward, policy]
-  );
-
   const md = useMemo(() => {
     return [
       `$v_\\pi = r_\\pi + \\gamma P_\\pi v_\\pi$`,
@@ -54,10 +49,8 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
       `$\\gamma = ${reward.gamma}$`,
       `$(r_\\pi)^T =$`,
       `${displayMatrix([rewardTensor])}`,
-      `$P_\\pi = $`,
-      `\`\`\`plaintext\n${displayMatrix(transitionTensor, 0, " ")}\n\`\`\``,
     ].join("\n\n");
-  }, [reward, rewardTensor, transitionTensor]);
+  }, [reward, rewardTensor]);
 
   return (
     <div className="m-2">
