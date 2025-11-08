@@ -1,11 +1,4 @@
-import {
-  Dot,
-  MoveDown,
-  MoveLeft,
-  MoveRight,
-  MoveUp,
-  type LucideIcon,
-} from "lucide-react";
+import { Dot, MoveDown, MoveLeft, MoveRight, MoveUp } from "lucide-react";
 import { z } from "zod";
 import { applyMatrixToVector, identityMatrix, matrixAdd } from "./tensor";
 import { createZodStore } from "./zod-store";
@@ -130,7 +123,7 @@ export const actionDeltas: Record<
   left: { deltaR: 0, deltaC: -1 },
   up: { deltaR: -1, deltaC: 0 },
 };
-export const gridActionIcon: Record<GridAction, LucideIcon> = {
+export const gridActionIcon: Record<GridAction, React.ElementType> = {
   stay: Dot,
   up: MoveUp,
   down: MoveDown,
@@ -139,66 +132,78 @@ export const gridActionIcon: Record<GridAction, LucideIcon> = {
 };
 
 export const GridPolicySchema = z.object({
-  policy: z.array(z.array(GridActionSchema)),
+  actions: z.array(z.array(GridActionSchema)),
 });
 export type GridPolicy = z.infer<typeof GridPolicySchema>;
 export function createDefaultGridPolicy(): GridPolicy {
-  return { policy: [] };
+  return { actions: [] };
 }
 
 export function getPolicyExamples(
   rows: number,
   cols: number
-): { name: string; policy: GridAction[][] }[] {
+): { name: string; policy: GridPolicy }[] {
   const examples: {
     name: string;
     rows: number;
     cols: number;
-    policy: GridAction[][];
+    policy: GridPolicy;
   }[] = [
     {
       name: "Policy 1",
       rows: 5,
       cols: 5,
-      policy: [
-        ["right", "right", "right", "down", "down"],
-        ["up", "up", "right", "down", "down"],
-        ["up", "left", "down", "right", "down"],
-        ["up", "right", "stay", "left", "down"],
-        ["up", "right", "up", "left", "left"],
-      ] as const,
+      policy: {
+        actions: [
+          ["right", "right", "right", "down", "down"],
+          ["up", "up", "right", "down", "down"],
+          ["up", "left", "down", "right", "down"],
+          ["up", "right", "stay", "left", "down"],
+          ["up", "right", "up", "left", "left"],
+        ],
+      },
     },
     {
       name: "Policy 2",
       rows: 5,
       cols: 5,
-      policy: [
-        ["right", "right", "right", "right", "down"],
-        ["up", "up", "right", "right", "down"],
-        ["up", "left", "down", "right", "down"],
-        ["up", "right", "stay", "left", "down"],
-        ["up", "right", "up", "left", "left"],
-      ] as const,
+      policy: {
+        actions: [
+          ["right", "right", "right", "right", "down"],
+          ["up", "up", "right", "right", "down"],
+          ["up", "left", "down", "right", "down"],
+          ["up", "right", "stay", "left", "down"],
+          ["up", "right", "up", "left", "left"],
+        ],
+      },
     },
     {
       name: "Policy 3",
       rows: 5,
       cols: 5,
-      policy: Array.from({ length: 5 }, () =>
-        Array.from({ length: 5 }, () => "right" as const)
-      ),
+      policy: {
+        actions: [
+          ["right", "right", "right", "right", "right"],
+          ["right", "right", "right", "right", "right"],
+          ["right", "right", "right", "right", "right"],
+          ["right", "right", "right", "right", "right"],
+          ["right", "right", "right", "right", "right"],
+        ],
+      },
     },
     {
       name: "Policy 4",
       rows: 5,
       cols: 5,
-      policy: [
-        ["right", "left", "left", "up", "up"],
-        ["down", "stay", "right", "down", "right"],
-        ["left", "right", "down", "left", "stay"],
-        ["stay", "down", "up", "up", "right"],
-        ["stay", "right", "stay", "right", "stay"],
-      ] as const,
+      policy: {
+        actions: [
+          ["right", "left", "left", "up", "up"],
+          ["down", "stay", "right", "down", "right"],
+          ["left", "right", "down", "left", "stay"],
+          ["stay", "down", "up", "up", "right"],
+          ["stay", "right", "stay", "right", "stay"],
+        ],
+      },
     },
   ];
   return [
@@ -206,9 +211,11 @@ export function getPolicyExamples(
       name: "All Stay",
       rows,
       cols,
-      policy: Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () => "stay" as const)
-      ),
+      policy: {
+        actions: Array.from({ length: rows }, () =>
+          Array.from({ length: cols }, () => "stay" as const)
+        ),
+      },
     },
     ...examples.filter(
       example => example.rows === rows && example.cols === cols
@@ -216,12 +223,12 @@ export function getPolicyExamples(
   ];
 }
 
-export function safeGetCellPolicy(
+export function safeGetCellAction(
   policy: GridPolicy,
   r: number,
   c: number
 ): GridAction {
-  return policy.policy[r]?.[c] ?? "stay";
+  return policy.actions[r]?.[c] ?? "stay";
 }
 
 export const useGridPolicy = createZodStore(
@@ -262,7 +269,7 @@ export function getRewardTensor(
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const action = safeGetCellPolicy(policy, r, c);
+      const action = safeGetCellAction(policy, r, c);
       const actionReward = getActionResult(env, reward, r, c, action).reward;
       rewardMatrix.push(actionReward);
     }
@@ -285,7 +292,7 @@ export function getTransitionTensor(
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const stateIndex = r * cols + c;
-      const action = safeGetCellPolicy(policy, r, c);
+      const action = safeGetCellAction(policy, r, c);
       const { r: newR, c: newC } = getActionResult(env, reward, r, c, action);
       const newStateIndex = newR * cols + newC;
       transitionTensor[stateIndex]![newStateIndex] = 1;

@@ -35,7 +35,7 @@ export function EnvironmentPage() {
     <div className="flex justify-center">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap gap-2">
             <span className="text-muted-foreground">Examples:</span>
             {getGridExamples().map((example, idx) => (
               <Button

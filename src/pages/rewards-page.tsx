@@ -18,7 +18,7 @@ export function RewardsPage() {
     <div className="flex justify-center">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap gap-2">
             <span className="text-muted-foreground">Examples:</span>
             {getGridRewardExamples().map((example, idx) => (
               <Button

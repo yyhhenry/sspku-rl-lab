@@ -9,6 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { BellmanEquationsPage } from "@/pages/bellman-equations-page";
 import { EnvironmentPage } from "@/pages/environment-page";
 import { RewardsPage } from "@/pages/rewards-page";
 import { Grid, Grid2x2Check, Lollipop, Settings, Workflow } from "lucide-react";
@@ -37,6 +38,7 @@ export const routes: RouteItem[] = [
     path: "/bellman-equations",
     name: "Bellman Equations",
     icon: Workflow,
+    page: BellmanEquationsPage,
   },
 ] as const;
 
