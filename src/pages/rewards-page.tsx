@@ -36,7 +36,7 @@ export function RewardsPage() {
             <div className="flex items-center gap-2">
               <label className="w-28 text-sm">Gamma</label>
               <LazyNumberInput
-                className="w-20 text-center"
+                className="w-16 text-center"
                 step={0.01}
                 value={gridReward.gamma}
                 setValue={v => {
@@ -51,7 +51,7 @@ export function RewardsPage() {
             <div className="flex items-center gap-2">
               <label className="w-28 text-sm">Border</label>
               <LazyNumberInput
-                className="w-20 text-center"
+                className="w-16 text-center"
                 step={0.1}
                 value={gridReward.border}
                 setValue={v => setGridReward({ ...gridReward, border: v })}
@@ -72,7 +72,7 @@ export function RewardsPage() {
                   <span>{cell}</span>
                 </div>
                 <LazyNumberInput
-                  className="w-20 text-center"
+                  className="w-16 text-center"
                   step={0.1}
                   value={gridReward.cell[cell]}
                   setValue={v =>
