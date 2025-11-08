@@ -66,7 +66,7 @@ export function CodeBlock(props: { code: string; lang: string }) {
     }
   };
   return (
-    <div className="hljs p-2 rounded-md border">
+    <div className="hljs p-2 rounded-md border w-full">
       <div className="flex items-center justify-between">
         <span className="p-2">{props.lang}</span>
         <Button variant="ghost" onClick={() => copy(props.code)}>
@@ -88,7 +88,7 @@ export function Markdown(props: { content: string }) {
   const tokens = useMemo(() => markedLex(props.content), [props.content]);
 
   return (
-    <div className="markdown-document">
+    <div>
       {tokens.map(token => {
         if (token.type === "code") {
           const codeToken = token as Tokens.Code;

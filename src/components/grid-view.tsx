@@ -2,16 +2,18 @@ import { gridCellColor, safeGetCell, type GridEnv } from "@/lib/grid-env";
 import { cn } from "@/lib/utils";
 
 export function GridView({
+  className,
   env,
   cell,
   onClick,
 }: {
+  className?: string;
   env: GridEnv;
   cell?: (r: number, c: number) => React.ReactNode;
   onClick?: (r: number, c: number) => void;
 }) {
   return (
-    <div className="flex justify-center">
+    <div className={cn("flex justify-center", className)}>
       <table className="border-collapse">
         <tbody>
           {Array.from({ length: env.rows }, (_, r) => (

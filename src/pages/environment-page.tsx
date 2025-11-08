@@ -49,7 +49,7 @@ export function EnvironmentPage() {
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <div className="flex flex-col items-center gap-4 w-fit min-w-full">
+          <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
             <div className="flex items-center gap-2">
               <LazyNumberInput
                 className="w-12 text-center"

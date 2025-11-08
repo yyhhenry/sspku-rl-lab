@@ -1,19 +1,158 @@
 import { GridView } from "@/components/grid-view";
+import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getPolicyExamples,
+  getRewardTensor,
+  getTransitionTensor,
   gridActionEnum,
   gridActionIcon,
   safeGetCellAction,
   useGridEnv,
   useGridPolicy,
+  useGridReward,
+  type GridEnv,
+  type GridPolicy,
+  type GridReward,
 } from "@/lib/grid-env";
+import {
+  applyMatrixToVector,
+  checkMatrix,
+  displayMatrix,
+  identityMatrix,
+  InvertMatrix,
+  matrixAdd,
+} from "@/lib/tensor";
+import { useMemo } from "react";
+import { toast } from "sonner";
+
+interface BellmanEquationProps {
+  env: GridEnv;
+  reward: GridReward;
+  policy: GridPolicy;
+}
+
+function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
+  const rewardTensor = useMemo(
+    () => getRewardTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  const transitionTensor = useMemo(
+    () => getTransitionTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  const md = useMemo(() => {
+    return [
+      `$v_\\pi = r_\\pi + \\gamma P_\\pi v_\\pi$`,
+      `Here, $v_\\pi$ is the value function under policy $\\pi$, $r_\\pi$ is the expected immediate reward vector under policy $\\pi$, $P_\\pi$ is the state transition matrix under policy $\\pi$, and $\\gamma$ is the discount factor. Where:`,
+      `$\\gamma = ${reward.gamma}$`,
+      `$(r_\\pi)^T =$`,
+      `${displayMatrix([rewardTensor])}`,
+      `$P_\\pi = $`,
+      `\`\`\`txt\n${displayMatrix(transitionTensor, 0, " ")}\n\`\`\``,
+    ].join("\n\n");
+  }, [reward, rewardTensor, transitionTensor]);
+
+  return (
+    <div className="m-2">
+      <Markdown content={md} />
+    </div>
+  );
+}
+
+function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
+  const rewardTensor = useMemo(
+    () => getRewardTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  const transitionTensor = useMemo(
+    () => getTransitionTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  const inverseTensor = useMemo(() => {
+    // Compute (I - γ P)^(-1)
+    const gamma = reward.gamma;
+    const [n, cols] = checkMatrix(transitionTensor);
+    if (n !== cols) {
+      throw new Error("Transition tensor must be square");
+    }
+    const I = identityMatrix(n);
+    const I_minus_gamma_P = matrixAdd(I, transitionTensor, {
+      alpha: 1,
+      beta: -gamma,
+    });
+    try {
+      return InvertMatrix(I_minus_gamma_P);
+    } catch {
+      toast.error(
+        "Failed to compute inverse matrix. The policy may lead to a singular transition matrix."
+      );
+      return I;
+    }
+  }, [reward, transitionTensor]);
+
+  const valueTensor = useMemo(() => {
+    return applyMatrixToVector(inverseTensor, rewardTensor);
+  }, [inverseTensor, rewardTensor]);
+
+  const md = useMemo(() => {
+    return [
+      `$v_\\pi = $`,
+      `${displayMatrix([valueTensor], 4, " ")}`,
+      `$(I - \\gamma P_\\pi)^{-1} = $`,
+      `\`\`\`txt\n${displayMatrix(inverseTensor, 2, " ")}\n\`\`\``,
+    ].join("\n\n");
+  }, [inverseTensor, valueTensor]);
+
+  return (
+    <div className="m-2">
+      <Markdown content={"$v_\\pi = (I - \\gamma P_\\pi)^{-1} r_\\pi$"} />
+      <div className="overflow-x-auto">
+        <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
+          <GridView
+            className="my-2"
+            env={env}
+            cell={(r, c) => {
+              return (
+                <span className="text-xs">
+                  {valueTensor[r * env.cols + c]?.toFixed(1) ?? ""}
+                </span>
+              );
+            }}
+          />
+        </div>
+      </div>
+      <Markdown content={md} />
+    </div>
+  );
+}
+
+function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
+  const rewardTensor = useMemo(
+    () => getRewardTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  const transitionTensor = useMemo(
+    () => getTransitionTensor(env, reward, policy),
+    [env, reward, policy]
+  );
+
+  return <div className="m-2"></div>;
+}
 
 export function BellmanEquationsPage() {
   const [gridEnv] = useGridEnv();
+  const [gridReward] = useGridReward();
   const [gridPolicy, setGridPolicy] = useGridPolicy();
+
   const cyclePolicy = (r: number, c: number) => {
     const action = safeGetCellAction(gridPolicy, r, c);
     const actionIdx = gridActionEnum.findIndex(v => v === action);
@@ -29,7 +168,7 @@ export function BellmanEquationsPage() {
   };
   return (
     <div className="flex justify-center">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-3xl">
         <CardHeader>
           <div className="flex items-center flex-wrap gap-2">
             <span className="text-muted-foreground">Examples:</span>
@@ -47,34 +186,73 @@ export function BellmanEquationsPage() {
           </div>
         </CardHeader>
 
-        <CardContent className="overflow-x-auto">
-          <div className="flex flex-col items-center gap-4 w-fit min-w-full">
-            <GridView
-              env={gridEnv}
-              onClick={cyclePolicy}
-              cell={(r, c) => {
-                const ActionIcon =
-                  gridActionIcon[safeGetCellAction(gridPolicy, r, c)];
+        <CardContent>
+          <div className="overflow-x-auto">
+            <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
+              <GridView
+                env={gridEnv}
+                onClick={cyclePolicy}
+                cell={(r, c) => {
+                  const ActionIcon =
+                    gridActionIcon[safeGetCellAction(gridPolicy, r, c)];
 
-                return <ActionIcon className="w-6 h-6 cursor-pointer" />;
-              }}
-            />
-            <span className="flex items-center flex-wrap gap-1 mt-2 text-xs text-muted-foreground">
-              <span>Click to cycle:</span>
-              {gridActionEnum.map(action => {
-                const ActionIcon = gridActionIcon[action];
-                return (
-                  <span
-                    key={action}
-                    className="flex items-center gap-1 border px-2 py-1 rounded"
-                  >
-                    <ActionIcon className="w-4 h-4" />
-                    <span>{action}</span>
-                  </span>
-                );
-              })}
-            </span>
-            <Separator />
+                  return <ActionIcon className="w-6 h-6 cursor-pointer" />;
+                }}
+              />
+              <span className="flex items-center flex-wrap gap-1 mt-2 text-xs text-muted-foreground">
+                <span>Click to cycle:</span>
+                {gridActionEnum.map(action => {
+                  const ActionIcon = gridActionIcon[action];
+                  return (
+                    <span
+                      key={action}
+                      className="flex items-center gap-1 border px-2 py-1 rounded"
+                    >
+                      <ActionIcon className="w-4 h-4" />
+                      <span>{action}</span>
+                    </span>
+                  );
+                })}
+              </span>
+            </div>
+          </div>
+          <Separator className="my-4" />
+
+          <div className="w-full">
+            <Tabs defaultValue="common-data">
+              <div className="overflow-x-auto">
+                <TabsList className="w-fit min-w-full">
+                  <TabsTrigger value="common-data">Common Data</TabsTrigger>
+                  <TabsTrigger value="closed-form">
+                    Closed-form Solution
+                  </TabsTrigger>
+                  <TabsTrigger value="iterative">
+                    Iterative Solution
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              <TabsContent value="common-data">
+                <PolicyCommonData
+                  env={gridEnv}
+                  reward={gridReward}
+                  policy={gridPolicy}
+                />
+              </TabsContent>
+              <TabsContent value="closed-form">
+                <ClosedFormSolution
+                  env={gridEnv}
+                  reward={gridReward}
+                  policy={gridPolicy}
+                />
+              </TabsContent>
+              <TabsContent value="iterative">
+                <IterativeSolution
+                  env={gridEnv}
+                  reward={gridReward}
+                  policy={gridPolicy}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </CardContent>
       </Card>
