@@ -1,4 +1,3 @@
-import { Separator } from "@radix-ui/react-separator";
 import DOMPurify from "dompurify";
 import hljs from "highlight.js/lib/common";
 import "highlight.js/styles/github-dark.min.css";
@@ -7,6 +6,7 @@ import markedKatex from "marked-katex-extension";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
+import { Separator } from "./ui/separator";
 
 marked.use(
   markedKatex({

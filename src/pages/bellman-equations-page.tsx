@@ -1,6 +1,7 @@
 import { GridView } from "@/components/grid-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   getPolicyExamples,
   gridActionEnum,
@@ -73,6 +74,7 @@ export function BellmanEquationsPage() {
                 );
               })}
             </span>
+            <Separator />
           </div>
         </CardContent>
       </Card>

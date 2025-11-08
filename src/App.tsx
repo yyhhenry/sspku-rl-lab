@@ -10,8 +10,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@radix-ui/react-separator";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import { Separator } from "./components/ui/separator";
 import { Toaster } from "./components/ui/sonner";
 import { routes } from "./lib/routes";
 import { useThemeEffect } from "./lib/theme";
