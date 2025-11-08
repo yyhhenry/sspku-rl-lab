@@ -2,7 +2,6 @@ import { ButtonGroup } from "@/components/ui/button-group";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "./ui/button";
 
 export function LazyInput({
@@ -13,15 +12,16 @@ export function LazyInput({
   value: string;
   setValue: (v: string) => void;
 } & React.ComponentProps<typeof Input>) {
+  const [syncTrigger, setSyncTrigger] = useState(0);
   const [inputValue, setInputValue] = useState(value);
-  useEffect(() => setInputValue(value), [value]);
+  useEffect(() => setInputValue(value), [value, syncTrigger]);
   return (
     <Input
       value={inputValue}
       onChange={e => setInputValue(e.target.value)}
       onBlur={() => {
-        toast.info(`Blur: inputValue=${inputValue} value=${value}`);
         setValue(inputValue);
+        setSyncTrigger(v => v + 1);
       }}
       {...props}
     />

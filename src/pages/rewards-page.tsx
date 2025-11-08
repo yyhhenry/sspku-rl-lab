@@ -9,6 +9,7 @@ import {
   useGridReward,
 } from "@/lib/grid-env";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function RewardsPage() {
   const [gridReward, setGridReward] = useGridReward();
@@ -42,6 +43,7 @@ export function RewardsPage() {
                   if (!isFinite(v)) v = 0.9;
                   if (v < 0.01) v = 0.01;
                   if (v > 0.99) v = 0.99;
+                  toast.info(`Set gamma to ${v}`);
                   setGridReward({ ...gridReward, gamma: v });
                 }}
               />
