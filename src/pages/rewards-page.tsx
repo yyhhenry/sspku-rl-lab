@@ -1,7 +1,6 @@
-import { InputOnBlur } from "@/components/refined-input";
+import { LazyNumberInput } from "@/components/lazy-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   getGridRewardExamples,
@@ -9,7 +8,7 @@ import {
   gridCellEnum,
   useGridReward,
 } from "@/lib/grid-env";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 
 export function RewardsPage() {
   const [gridReward, setGridReward] = useGridReward();
@@ -32,38 +31,28 @@ export function RewardsPage() {
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
-          <div className="flex flex-col items-center gap-2 w-fit min-w-full">
+          <div className="flex flex-col items-center my-2 gap-2 w-fit min-w-full">
             <div className="flex items-center gap-2">
               <label className="w-28 text-sm">Gamma</label>
-              <InputOnBlur
+              <LazyNumberInput
+                className="w-20 text-center"
+                step={0.01}
                 value={gridReward.gamma}
-                setValue={s => {
-                  let v = Number(s);
+                setValue={v => {
                   if (!isFinite(v)) v = 0.9;
                   if (v < 0.01) v = 0.01;
                   if (v > 0.99) v = 0.99;
-                  setGridReward({
-                    ...gridReward,
-                    gamma: v,
-                  });
+                  setGridReward({ ...gridReward, gamma: v });
                 }}
-                step={0.01}
-                className="w-32"
               />
             </div>
             <div className="flex items-center gap-2">
               <label className="w-28 text-sm">Border</label>
-              <Input
-                type="number"
-                step="0.1"
+              <LazyNumberInput
+                className="w-20 text-center"
+                step={0.1}
                 value={gridReward.border}
-                onChange={e =>
-                  setGridReward({
-                    ...gridReward,
-                    border: Number(e.target.value),
-                  })
-                }
-                className="w-32"
+                setValue={v => setGridReward({ ...gridReward, border: v })}
               />
             </div>
             <div className="w-75">
@@ -73,27 +62,23 @@ export function RewardsPage() {
               <div className="flex items-center gap-2" key={cell}>
                 <div className="w-28 text-sm capitalize flex items-center gap-2">
                   <div
-                    className={twMerge(
+                    className={cn(
                       "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
                       gridCellColor[cell]
                     )}
                   />
                   <span>{cell}</span>
                 </div>
-                <Input
-                  type="number"
-                  step="0.01"
+                <LazyNumberInput
+                  className="w-20 text-center"
+                  step={0.1}
                   value={gridReward.cell[cell]}
-                  onChange={e =>
+                  setValue={v =>
                     setGridReward({
                       ...gridReward,
-                      cell: {
-                        ...gridReward.cell,
-                        [cell]: Number(e.target.value),
-                      },
+                      cell: { ...gridReward.cell, [cell]: v },
                     })
                   }
-                  className="w-32"
                 />
               </div>
             ))}

@@ -9,38 +9,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BellmanEquationsPage } from "@/pages/bellman-equations-page";
-import { EnvironmentPage } from "@/pages/environment-page";
-import { RewardsPage } from "@/pages/rewards-page";
-import { Grid, Grid2x2Check, Lollipop, Settings, Workflow } from "lucide-react";
+import { routes } from "@/lib/routes";
+import { Grid2x2Check, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-
-export interface RouteItem {
-  path: string;
-  name: string;
-  icon?: React.ElementType;
-  page?: React.ElementType;
-}
-export const routes: RouteItem[] = [
-  {
-    path: "/environment",
-    name: "Environment",
-    icon: Grid,
-    page: EnvironmentPage,
-  },
-  {
-    path: "/rewards",
-    name: "Rewards",
-    icon: Lollipop,
-    page: RewardsPage,
-  },
-  {
-    path: "/bellman-equations",
-    name: "Bellman Equations",
-    icon: Workflow,
-    page: BellmanEquationsPage,
-  },
-] as const;
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (

@@ -1,4 +1,4 @@
-import { AppSidebar, routes } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@radix-ui/react-separator";
 import { HashRouter, Route, Routes } from "react-router-dom";
-import { useThemeEffect } from "./components/theme-provider";
+import { Toaster } from "./components/ui/sonner";
+import { routes } from "./lib/routes";
+import { useThemeEffect } from "./lib/theme";
 import { HomePage } from "./pages/home-page";
 import { SettingsPage } from "./pages/settings-page";
 
@@ -44,6 +46,7 @@ export function App() {
   useThemeEffect();
   return (
     <HashRouter>
+      <Toaster />
       <SidebarProvider>
         <AppSidebar variant="inset" />
         <SidebarInset>

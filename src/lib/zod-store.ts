@@ -1,7 +1,7 @@
 import { useAtom } from "jotai/react";
 import { atomWithStorage } from "jotai/utils";
 import { toast } from "sonner";
-import { ZodType } from "zod";
+import z, { ZodType } from "zod";
 
 export const storagePrefix = "sspku-rl-lab:";
 
@@ -22,14 +22,17 @@ export function createZodStore<T>(
       if (parsed.success) {
         setStored({ value: parsed.data });
       } else {
-        toast.error(`Failed to save ${key}: invalid data format.`);
+        toast.error(`Failed to save ${key}: ${z.prettifyError(parsed.error)}`);
       }
     };
     const getWithValidation = (): T => {
-      try {
-        return schema.parse(stored.value);
-      } catch {
-        toast.error(`Failed to retrieve ${key}: invalid data format.`);
+      const parsed = schema.safeParse(stored.value);
+      if (parsed.success) {
+        return parsed.data;
+      } else {
+        toast.error(
+          `Failed to retrieve ${key}: ${z.prettifyError(parsed.error)}`
+        );
         return createDefault();
       }
     };

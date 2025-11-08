@@ -1,10 +1,3 @@
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { createZodStore } from "@/lib/zod-store";
 import { useEffect } from "react";
 import z from "zod";
@@ -45,25 +38,4 @@ export function useThemeEffect() {
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
-}
-
-export function ThemeSelect() {
-  const [theme, setTheme] = useTheme();
-  const updateTheme = (newValue: string) => {
-    const parsed = ThemeSchema.safeParse(newValue);
-    if (!parsed.success) return;
-    setTheme(parsed.data);
-  };
-  return (
-    <Select value={theme} onValueChange={updateTheme}>
-      <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="Theme" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="light">Light</SelectItem>
-        <SelectItem value="dark">Dark</SelectItem>
-        <SelectItem value="system">System</SelectItem>
-      </SelectContent>
-    </Select>
-  );
 }

@@ -1,5 +1,5 @@
 import { GridView } from "@/components/grid-view";
-import { InputOnBlur } from "@/components/refined-input";
+import { LazyNumberInput } from "@/components/lazy-input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -9,7 +9,7 @@ import {
   safeGetCell,
   useGridEnv,
 } from "@/lib/grid-env";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 
 export function EnvironmentPage() {
   const [gridEnv, setGridEnv] = useGridEnv();
@@ -51,26 +51,20 @@ export function EnvironmentPage() {
         <CardContent className="overflow-x-auto">
           <div className="flex flex-col items-center gap-4 w-fit min-w-full">
             <div className="flex items-center gap-2">
-              <InputOnBlur
+              <LazyNumberInput
+                className="w-12 text-center"
                 value={gridEnv.rows}
                 setValue={v => {
-                  setGridEnv({
-                    ...gridEnv,
-                    rows: refineSize(Number(v)),
-                  });
+                  setGridEnv({ ...gridEnv, rows: refineSize(v) });
                 }}
-                className="w-20"
               />
               <span>x</span>
-              <InputOnBlur
+              <LazyNumberInput
+                className="w-12 text-center"
                 value={gridEnv.cols}
                 setValue={v => {
-                  setGridEnv({
-                    ...gridEnv,
-                    cols: refineSize(Number(v)),
-                  });
+                  setGridEnv({ ...gridEnv, cols: refineSize(v) });
                 }}
-                className="w-20"
               />
             </div>
             <GridView env={gridEnv} onClick={cycleCell} />
@@ -79,7 +73,7 @@ export function EnvironmentPage() {
               {gridCellEnum.map(cell => (
                 <>
                   <div
-                    className={twMerge(
+                    className={cn(
                       "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
                       gridCellColor[cell]
                     )}

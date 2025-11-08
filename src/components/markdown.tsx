@@ -38,12 +38,12 @@ function bracketsFormulaToKatex(content: string) {
   return content;
 }
 
-export function markedLex(content: string) {
+function markedLex(content: string) {
   content = bracketsFormulaToKatex(content);
 
   return marked.lexer(content);
 }
-export function markedParse(tokens: Token | Token[]) {
+function markedParse(tokens: Token | Token[]) {
   tokens = Array.isArray(tokens) ? tokens : [tokens];
   return DOMPurify.sanitize(marked.parser(tokens));
 }
