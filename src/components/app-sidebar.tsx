@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { EnvironmentPage } from "@/pages/environment-page";
 import { RewardsPage } from "@/pages/rewards-page";
-import { Award, Grid, Grid2x2Check, Settings, Workflow } from "lucide-react";
+import { Grid, Grid2x2Check, Lollipop, Settings, Workflow } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export interface RouteItem {
@@ -30,7 +30,7 @@ export const routes: RouteItem[] = [
   {
     path: "/rewards",
     name: "Rewards",
-    icon: Award,
+    icon: Lollipop,
     page: RewardsPage,
   },
   {

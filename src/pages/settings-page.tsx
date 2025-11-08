@@ -10,7 +10,7 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           <p className="flex items-center gap-4">
-            <span>Theme:</span>
+            <span>Theme</span>
             <ThemeSelect />
           </p>
         </CardContent>

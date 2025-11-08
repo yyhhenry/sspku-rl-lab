@@ -2,13 +2,13 @@ import { InputOnBlur } from "@/components/input-on-blur";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
   getGridRewardExamples,
   gridCellColor,
   gridCellEnum,
   useGridReward,
 } from "@/lib/grid-env";
-import { Separator } from "@radix-ui/react-separator";
 import { twMerge } from "tailwind-merge";
 
 export function RewardsPage() {
@@ -66,7 +66,9 @@ export function RewardsPage() {
                 className="w-32"
               />
             </div>
-            <Separator />
+            <div className="w-75">
+              <Separator />
+            </div>
             {gridCellEnum.map(cell => (
               <div className="flex items-center gap-2" key={cell}>
                 <div className="w-28 text-sm capitalize flex items-center gap-2">
