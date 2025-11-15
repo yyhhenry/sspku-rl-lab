@@ -1,4 +1,4 @@
-import EditGridView from '@/views/EditGridView.vue'
+import EnvironmentView from '@/views/EnvironmentView.vue'
 import SettingsView from '@/views/SettingsView.vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import EditPolicyView from '../views/EditPolicyView.vue'
@@ -15,9 +15,9 @@ const router = createRouter({
       component: HomeView,
     },
     {
-      path: '/edit-grid',
-      name: 'Edit Grid',
-      component: EditGridView,
+      path: '/environment',
+      name: 'Environment',
+      component: EnvironmentView,
     },
     {
       path: '/edit-policy',

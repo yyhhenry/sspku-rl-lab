@@ -12,7 +12,7 @@ const { store: mode } = useColorMode()
 </script>
 <template>
   <div class="flex justify-center">
-    <Card class="w-full max-w-xl">
+    <Card class="w-full max-w-xl bg-foreground/5">
       <CardHeader>
         <CardTitle>Preferences</CardTitle>
       </CardHeader>

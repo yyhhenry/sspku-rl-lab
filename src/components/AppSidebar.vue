@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import { Grid2x2Check, Settings, Workflow } from 'lucide-vue-next'
+import { Grid, Grid2x2Check, Settings, Workflow } from 'lucide-vue-next'
 import { ref } from 'vue'
 import SidebarGroupContent from './ui/sidebar/SidebarGroupContent.vue'
 
@@ -21,8 +21,8 @@ const props = withDefaults(defineProps<SidebarProps>(), {
 const navMain = ref([
   {
     title: 'Environment',
-    icon: Grid2x2Check,
-    url: '/edit-grid',
+    icon: Grid,
+    url: '/environment',
   },
   {
     title: 'Manual Policy',
