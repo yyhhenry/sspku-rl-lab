@@ -149,7 +149,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
     const iters: { value: number[]; maxDiff: number }[] = [
       { value: rewardTensor, maxDiff: Infinity },
     ];
-    while (iters.length < 100 && iters[iters.length - 1]!.maxDiff > 0.001) {
+    while (iters.length < 1000 && iters[iters.length - 1]!.maxDiff > 0.001) {
       const prev = iters[iters.length - 1]!.value;
       const next = applyMatrixToVector(transitionTensor, prev).map(
         (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val

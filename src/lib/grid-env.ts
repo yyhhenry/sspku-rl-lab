@@ -119,6 +119,18 @@ export function getGridRewardExamples(): {
         },
       },
     },
+    {
+      name: "Strict",
+      reward: {
+        gamma: 0.9,
+        border: -1,
+        cell: {
+          empty: 0,
+          forbidden: -10,
+          goal: 1,
+        },
+      },
+    },
   ];
 }
 
