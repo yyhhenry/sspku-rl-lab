@@ -9,6 +9,7 @@ import {
   safeGetCell,
   useGridEnv,
 } from "@/lib/grid-env";
+import { mat } from "@/lib/tensor";
 import { cn } from "@/lib/utils";
 
 export function EnvironmentPage() {
@@ -17,10 +18,8 @@ export function EnvironmentPage() {
     const cell = safeGetCell(gridEnv, r, c);
     const cellIdx = gridCellEnum.findIndex(v => v === cell);
     const newCell = gridCellEnum[(cellIdx + 1) % gridCellEnum.length];
-    const newCells = Array.from({ length: gridEnv.rows }, (_, row) =>
-      Array.from({ length: gridEnv.cols }, (_, col) =>
-        row === r && col === c ? newCell : safeGetCell(gridEnv, row, col)
-      )
+    const newCells = mat(gridEnv.rows, gridEnv.cols, (newR, newC) =>
+      newR === r && newC === c ? newCell : safeGetCell(gridEnv, newR, newC),
     );
     setGridEnv({ ...gridEnv, cells: newCells });
   };
@@ -75,7 +74,7 @@ export function EnvironmentPage() {
                   <div
                     className={cn(
                       "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
-                      gridCellColor[cell]
+                      gridCellColor[cell],
                     )}
                   />
                   <span className="capitalize">{cell}</span>

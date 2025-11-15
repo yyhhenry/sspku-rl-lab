@@ -437,11 +437,17 @@ export function applyValueIteration(
 export function getValueByPolicyIteration(
   env: GridEnv,
   reward: GridReward,
-  numIters: number = Infinity,
-  valueNumIters: number = Infinity,
-  valueTolerance: number = 0.001,
+  {
+    numIters = Infinity,
+    valueNumIters = Infinity,
+    valueTolerance = 0.001,
+  }: {
+    numIters: number;
+    valueNumIters: number;
+    valueTolerance: number;
+  },
 ): { value: number[]; policy: GridPolicy }[] {
-  const getState = (policy: GridPolicy) => {
+  const getValue = (policy: GridPolicy) => {
     return getStateValueWith(
       env,
       reward,
@@ -451,9 +457,8 @@ export function getValueByPolicyIteration(
     );
   };
   const idlePolicy = createDefaultGridPolicy();
-  const idleValue = getState(idlePolicy);
   const iters: { value: number[]; policy: GridPolicy }[] = [
-    { value: idleValue, policy: idlePolicy },
+    { value: getValue(idlePolicy), policy: idlePolicy },
   ];
 
   while (iters.length < numIters) {
@@ -479,7 +484,7 @@ export function getValueByPolicyIteration(
       }),
     };
     iters.push({
-      value: getState(newPolicy),
+      value: getValue(newPolicy),
       policy: newPolicy,
     });
     if (

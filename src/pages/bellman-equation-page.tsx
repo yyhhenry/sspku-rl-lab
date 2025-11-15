@@ -25,6 +25,7 @@ import {
   displayMatrix,
   identityMatrix,
   InvertMatrix,
+  mat,
   matrixAdd,
 } from "@/lib/tensor";
 import { useEffect, useMemo, useState } from "react";
@@ -227,12 +228,10 @@ export function BellmanEquationPage() {
     const action = safeGetCellAction(gridPolicy, r, c);
     const actionIdx = gridActionEnum.findIndex(v => v === action);
     const newAction = gridActionEnum[(actionIdx + 1) % gridActionEnum.length];
-    const newActions = Array.from({ length: gridEnv.rows }, (_, row) =>
-      Array.from({ length: gridEnv.cols }, (_, col) =>
-        row === r && col === c
-          ? newAction
-          : safeGetCellAction(gridPolicy, row, col),
-      ),
+    const newActions = mat(gridEnv.rows, gridEnv.cols, (newR, newC) =>
+      newR === r && newC === c
+        ? newAction
+        : safeGetCellAction(gridPolicy, newR, newC),
     );
     setGridPolicy({ ...gridPolicy, actions: newActions });
   };
