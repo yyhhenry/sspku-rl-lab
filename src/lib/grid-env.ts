@@ -1,5 +1,6 @@
 import { Dot, MoveDown, MoveLeft, MoveRight, MoveUp } from "lucide-react";
 import { z } from "zod";
+import { arr, mat } from "./tensor";
 import { createZodStore } from "./zod-store";
 
 // Grid Environment
@@ -17,21 +18,19 @@ export const GridEnvSchema = z.object({
 export type GridEnv = z.infer<typeof GridEnvSchema>;
 
 export function randomGrid(rows: number, cols: number): GridEnv {
-  const cells: GridCell[][] = Array.from({ length: rows }, () =>
-    Array.from({ length: cols }, () =>
-      Math.random() < 0.7 ? "empty" : "forbidden"
-    )
+  const cells: GridCell[][] = mat(rows, cols, () =>
+    Math.random() < 0.7 ? "empty" : "forbidden",
   );
   const goalPos = [
     Math.floor(Math.random() * rows),
     Math.floor(Math.random() * cols),
   ] as const;
-  cells[goalPos[0]]![goalPos[1]] = "goal";
+  cells[goalPos[0]][goalPos[1]] = "goal";
   return { rows, cols, cells };
 }
 
 export function getGridExamples(
-  curEnv?: GridEnv
+  curEnv?: GridEnv,
 ): { name: string; env: GridEnv }[] {
   return [
     {
@@ -71,7 +70,11 @@ export function getGridExamples(
 }
 
 export function createDefaultGridEnv(): GridEnv {
-  return getGridExamples()[0].env;
+  return {
+    rows: 5,
+    cols: 5,
+    cells: mat(5, 5, () => "empty"),
+  };
 }
 
 export const gridCellColor: Record<GridCell, string> = {
@@ -87,7 +90,7 @@ export function safeGetCell(env: GridEnv, r: number, c: number): GridCell {
 export const useGridEnv = createZodStore(
   "grid-env",
   GridEnvSchema,
-  createDefaultGridEnv
+  createDefaultGridEnv,
 );
 
 // Grid Rewards
@@ -135,13 +138,21 @@ export function getGridRewardExamples(): {
 }
 
 export function createDefaultGridReward(): GridReward {
-  return getGridRewardExamples()[0].reward;
+  return {
+    gamma: 0.9,
+    border: -1,
+    cell: {
+      empty: 0,
+      forbidden: -1,
+      goal: 1,
+    },
+  };
 }
 
 export const useGridReward = createZodStore(
   "grid-reward",
   GridRewardSchema,
-  createDefaultGridReward
+  createDefaultGridReward,
 );
 
 // Grid Policy
@@ -176,7 +187,7 @@ export function createDefaultGridPolicy(): GridPolicy {
 
 export function getPolicyExamples(
   rows: number,
-  cols: number
+  cols: number,
 ): { name: string; policy: GridPolicy }[] {
   const examples: {
     name: string;
@@ -233,9 +244,7 @@ export function getPolicyExamples(
       rows,
       cols,
       policy: {
-        actions: Array.from({ length: rows }, () =>
-          Array.from({ length: cols }, () => "idle" as const)
-        ),
+        actions: mat(rows, cols, () => "idle" as const),
       },
     },
     {
@@ -243,17 +252,16 @@ export function getPolicyExamples(
       rows,
       cols,
       policy: {
-        actions: Array.from({ length: rows }, () =>
-          Array.from(
-            { length: cols },
-            () =>
-              gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)]
-          )
+        actions: mat(
+          rows,
+          cols,
+          () =>
+            gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)],
         ),
       },
     },
     ...examples.filter(
-      example => example.rows === rows && example.cols === cols
+      example => example.rows === rows && example.cols === cols,
     ),
   ];
 }
@@ -261,7 +269,7 @@ export function getPolicyExamples(
 export function safeGetCellAction(
   policy: GridPolicy,
   r: number,
-  c: number
+  c: number,
 ): GridAction {
   return policy.actions[r]?.[c] ?? "idle";
 }
@@ -269,69 +277,223 @@ export function safeGetCellAction(
 export const useGridPolicy = createZodStore(
   "grid-policy",
   GridPolicySchema,
-  createDefaultGridPolicy
+  createDefaultGridPolicy,
 );
 
 // Grid Transition and Reward Functions
-export function getActionResult(
+export function getActionReward(
   env: GridEnv,
   reward: GridReward,
   r: number,
   c: number,
-  action: GridAction
-): { r: number; c: number; reward: number } {
+  action: GridAction,
+): number {
   const { deltaR, deltaC } = actionDeltas[action];
   const newR = r + deltaR;
   const newC = c + deltaC;
   if (newR < 0 || newR >= env.rows || newC < 0 || newC >= env.cols) {
-    return { r, c, reward: reward.border };
+    return reward.border;
   }
+  const cell = safeGetCell(env, newR, newC);
+  return reward.cell[cell];
+}
+export function getActionMove(
+  env: GridEnv,
+  r: number,
+  c: number,
+  action: GridAction,
+): { r: number; c: number } {
+  const { deltaR, deltaC } = actionDeltas[action];
+  const newR = r + deltaR;
+  const newC = c + deltaC;
+  if (newR < 0 || newR >= env.rows || newC < 0 || newC >= env.cols) {
+    return { r, c };
+  }
+  return { r: newR, c: newC };
+}
+
+export function indexToRC(
+  env: GridEnv,
+  index: number,
+): { r: number; c: number } {
   return {
-    r: newR,
-    c: newC,
-    reward: reward.cell[safeGetCell(env, newR, newC)],
+    r: Math.floor(index / env.cols),
+    c: index % env.cols,
   };
+}
+
+export function rcToIndex(env: GridEnv, r: number, c: number): number {
+  return r * env.cols + c;
 }
 
 export function getRewardTensor(
   env: GridEnv,
   reward: GridReward,
-  policy: GridPolicy
+  policy: GridPolicy,
 ) {
   const rows = env.rows;
   const cols = env.cols;
-  const rewardMatrix: number[] = [];
-
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const action = safeGetCellAction(policy, r, c);
-      const actionReward = getActionResult(env, reward, r, c, action).reward;
-      rewardMatrix.push(actionReward);
-    }
-  }
-
-  return rewardMatrix;
+  return arr(rows * cols, i => {
+    const { r, c } = indexToRC(env, i);
+    const action = safeGetCellAction(policy, r, c);
+    return getActionReward(env, reward, r, c, action);
+  });
 }
 
-export function getTransitionTensor(
-  env: GridEnv,
-  reward: GridReward,
-  policy: GridPolicy
-) {
+export function get2DTransitionTensor(env: GridEnv, policy: GridPolicy) {
   const rows = env.rows;
   const cols = env.cols;
   const stateCount = rows * cols;
-  const transitionTensor: number[][] = Array.from({ length: stateCount }, () =>
-    Array.from({ length: stateCount }, () => 0)
-  );
+  const transitionTensor: number[][] = mat(stateCount, stateCount, () => 0);
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const stateIndex = r * cols + c;
+      const stateIndex = rcToIndex(env, r, c);
       const action = safeGetCellAction(policy, r, c);
-      const { r: newR, c: newC } = getActionResult(env, reward, r, c, action);
-      const newStateIndex = newR * cols + newC;
-      transitionTensor[stateIndex]![newStateIndex] = 1;
+      const { r: newR, c: newC } = getActionMove(env, r, c, action);
+      const newStateIndex = rcToIndex(env, newR, newC);
+      transitionTensor[stateIndex][newStateIndex] = 1;
     }
   }
   return transitionTensor;
+}
+
+// Bellman Optimality Equation
+
+export function getTransitionMap(env: GridEnv, policy: GridPolicy): number[] {
+  return arr(env.rows * env.cols, i => {
+    const { r, c } = indexToRC(env, i);
+    const action = safeGetCellAction(policy, r, c);
+    const { r: newR, c: newC } = getActionMove(env, r, c, action);
+    return rcToIndex(env, newR, newC);
+  });
+}
+
+export function getStateValueWith(
+  env: GridEnv,
+  reward: GridReward,
+  policy: GridPolicy,
+  numIters: number = Infinity,
+  tolerance: number = 0.001,
+): number[] {
+  const rewardTensor = getRewardTensor(env, reward, policy);
+  const transitionMap = getTransitionMap(env, policy);
+  let valueTensor = rewardTensor;
+  for (let i = 0; i < numIters; i++) {
+    const nextValueTensor = rewardTensor.map((val, idx) => {
+      const nextStateIndex = transitionMap[idx] ?? idx;
+      return val + reward.gamma * valueTensor[nextStateIndex];
+    });
+    const maxDiff = nextValueTensor.reduce((maxDiff, val, idx) => {
+      return Math.max(maxDiff, Math.abs(val - valueTensor[idx]));
+    }, 0);
+    if (maxDiff < tolerance) {
+      break;
+    }
+    valueTensor = nextValueTensor;
+  }
+  return valueTensor;
+}
+
+export function applyValueIteration(
+  env: GridEnv,
+  reward: GridReward,
+  numIters: number = Infinity,
+  tolerance: number = 0.001,
+): { value: number[]; maxDiff: number }[] {
+  const idlePolicy = createDefaultGridPolicy();
+  const idleRewardTensor = getRewardTensor(env, reward, idlePolicy);
+
+  const iters: { value: number[]; maxDiff: number }[] = [
+    {
+      value: idleRewardTensor.map(val => val / (1 - reward.gamma)),
+      maxDiff: Infinity,
+    },
+  ];
+
+  while (
+    iters.length < numIters &&
+    iters[iters.length - 1].maxDiff > tolerance
+  ) {
+    const prev = iters[iters.length - 1].value;
+    const next = prev.map((_, idx) => {
+      const { r, c } = indexToRC(env, idx);
+      return gridActionEnum
+        .map(action => {
+          const { r: newR, c: newC } = getActionMove(env, r, c, action);
+          const val = getActionReward(env, reward, r, c, action);
+          const newStateIndex = rcToIndex(env, newR, newC);
+          return val + reward.gamma * prev[newStateIndex];
+        })
+        .reduce((maxVal, val) => Math.max(maxVal, val), -Infinity);
+    });
+    const maxDiff = next.reduce((maxDiff, val, idx) => {
+      return Math.max(maxDiff, Math.abs(val - prev[idx]));
+    }, 0);
+    iters.push({ value: next, maxDiff });
+  }
+  return iters;
+}
+
+export function getValueByPolicyIteration(
+  env: GridEnv,
+  reward: GridReward,
+  numIters: number = Infinity,
+  valueNumIters: number = Infinity,
+  valueTolerance: number = 0.001,
+): { value: number[]; policy: GridPolicy }[] {
+  const getState = (policy: GridPolicy) => {
+    return getStateValueWith(
+      env,
+      reward,
+      policy,
+      valueNumIters,
+      valueTolerance,
+    );
+  };
+  const idlePolicy = createDefaultGridPolicy();
+  const idleValue = getState(idlePolicy);
+  const iters: { value: number[]; policy: GridPolicy }[] = [
+    { value: idleValue, policy: idlePolicy },
+  ];
+
+  while (iters.length < numIters) {
+    const prev = iters[iters.length - 1].value;
+    const prevPolicy = iters[iters.length - 1].policy;
+    const newPolicy: GridPolicy = {
+      actions: mat(env.rows, env.cols, (r, c) => {
+        const best = gridActionEnum
+          .map(action => {
+            const { r: newR, c: newC } = getActionMove(env, r, c, action);
+            const val = getActionReward(env, reward, r, c, action);
+            const newStateIndex = rcToIndex(env, newR, newC);
+            return {
+              value: val + reward.gamma * prev[newStateIndex],
+              action,
+            };
+          })
+          .reduce((best, curr) => (curr.value > best.value ? curr : best), {
+            value: -Infinity,
+            action: "idle" as GridAction,
+          });
+        return best.action;
+      }),
+    };
+    iters.push({
+      value: getState(newPolicy),
+      policy: newPolicy,
+    });
+    if (
+      arr(env.rows * env.cols, i => i).every(i => {
+        const { r, c } = indexToRC(env, i);
+        return (
+          safeGetCellAction(prevPolicy, r, c) ===
+          safeGetCellAction(newPolicy, r, c)
+        );
+      })
+    ) {
+      // No policy change
+      break;
+    }
+  }
+  return iters;
 }

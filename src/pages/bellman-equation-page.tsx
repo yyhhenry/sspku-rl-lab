@@ -6,9 +6,9 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  get2DTransitionTensor,
   getPolicyExamples,
   getRewardTensor,
-  getTransitionTensor,
   gridActionEnum,
   gridActionIcon,
   safeGetCellAction,
@@ -39,7 +39,7 @@ interface BellmanEquationProps {
 function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
   const md = useMemo(() => {
@@ -62,12 +62,12 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
 function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
   const transitionTensor = useMemo(
-    () => getTransitionTensor(env, reward, policy),
-    [env, reward, policy]
+    () => get2DTransitionTensor(env, policy),
+    [env, policy],
   );
 
   const inverseTensor = useMemo(() => {
@@ -86,7 +86,7 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
       return InvertMatrix(I_minus_gamma_P);
     } catch {
       toast.error(
-        "Failed to compute inverse matrix. The policy may lead to a singular transition matrix."
+        "Failed to compute inverse matrix. The policy may lead to a singular transition matrix.",
       );
       return I;
     }
@@ -129,12 +129,12 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
 function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
   const transitionTensor = useMemo(
-    () => getTransitionTensor(env, reward, policy),
-    [env, reward, policy]
+    () => get2DTransitionTensor(env, policy),
+    [env, policy],
   );
 
   const [iters, setIters] = useState<{
@@ -152,7 +152,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
     while (iters.length < 1000 && iters[iters.length - 1]!.maxDiff > 0.001) {
       const prev = iters[iters.length - 1]!.value;
       const next = applyMatrixToVector(transitionTensor, prev).map(
-        (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val
+        (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val,
       );
       const maxDiff = next.reduce((maxErr, val, idx) => {
         const err = Math.abs(val - (prev[idx] ?? 0));
@@ -231,8 +231,8 @@ export function BellmanEquationPage() {
       Array.from({ length: gridEnv.cols }, (_, col) =>
         row === r && col === c
           ? newAction
-          : safeGetCellAction(gridPolicy, row, col)
-      )
+          : safeGetCellAction(gridPolicy, row, col),
+      ),
     );
     setGridPolicy({ ...gridPolicy, actions: newActions });
   };
@@ -251,7 +251,7 @@ export function BellmanEquationPage() {
                 >
                   {example.name}
                 </Button>
-              )
+              ),
             )}
           </div>
         </CardHeader>
