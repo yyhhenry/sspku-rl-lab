@@ -1,5 +1,12 @@
 import { GridView } from "@/components/grid-view";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -99,9 +106,11 @@ export function OptimalValueIteration({
 export function OptimalPolicyIteration({
   env,
   reward,
+  valueNumIters,
 }: {
   env: GridEnv;
   reward: GridReward;
+  valueNumIters?: number;
 }) {
   const [itersView, setItersView] = useState<{
     activeIter: number;
@@ -117,12 +126,14 @@ export function OptimalPolicyIteration({
     ],
   });
   useEffect(() => {
-    const iters = optimalPolicyIteration(env, reward);
+    const iters = optimalPolicyIteration(env, reward, {
+      valueNumIters,
+    });
     setItersView({
       activeIter: iters.length - 1,
       iters,
     });
-  }, [env, reward]);
+  }, [env, reward, valueNumIters]);
   const valueTensor = useMemo(() => {
     return itersView.iters[itersView.activeIter]?.value ?? [];
   }, [itersView]);
@@ -176,13 +187,34 @@ export function OptimalPolicyIteration({
 export function OptimalityEquationPage() {
   const [gridEnv] = useGridEnv();
   const [gridReward] = useGridReward();
+  const [valueNumIters, setValueNumIters] = useState(4);
   return (
     <div className="flex justify-center">
       <Card className="w-full max-w-3xl">
         <CardContent>
           <div className="overflow-x-auto">
             <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-              TODO: Charts
+              <span>TODO: Charts</span>
+
+              <div className="my-2 flex items-center gap-4 justify-center">
+                <label className="text-sm">
+                  Truncated Policy Iteration "x":
+                </label>
+                <Select
+                  value={valueNumIters?.toString() ?? "Infinity"}
+                  onValueChange={val => setValueNumIters(Number(val))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Value Iteration Iterations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="80">80</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <Separator className="my-4" />
@@ -197,6 +229,9 @@ export function OptimalityEquationPage() {
                   <TabsTrigger value="policy-iteration">
                     Policy Iteration
                   </TabsTrigger>
+                  <TabsTrigger value="truncated-policy-iteration">
+                    Truncated Policy Iteration
+                  </TabsTrigger>
                 </TabsList>
               </div>
               <TabsContent value="value-iteration">
@@ -204,6 +239,13 @@ export function OptimalityEquationPage() {
               </TabsContent>
               <TabsContent value="policy-iteration">
                 <OptimalPolicyIteration env={gridEnv} reward={gridReward} />
+              </TabsContent>
+              <TabsContent value="truncated-policy-iteration">
+                <OptimalPolicyIteration
+                  env={gridEnv}
+                  reward={gridReward}
+                  valueNumIters={valueNumIters}
+                />
               </TabsContent>
             </Tabs>
           </div>

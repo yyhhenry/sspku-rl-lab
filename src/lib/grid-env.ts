@@ -367,12 +367,22 @@ export function getStateValueIters(
   reward: GridReward,
   policy: GridPolicy,
   options?: {
+    initialValue?: number[];
     numIters?: number;
     tolerance?: number;
   },
 ): { value: number[]; maxDiff: number }[] {
-  const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
+  const {
+    initialValue = arr(env.rows * env.cols, () => 0),
+    numIters = Infinity,
+    tolerance = 0.001,
+  } = options ?? {};
   const rewardTensor = getRewardTensor(env, reward, policy);
+  if (initialValue.length !== env.rows * env.cols) {
+    throw new Error(
+      "Initial value must have the same length as the number of cells in the environment",
+    );
+  }
   const nextMove = arr(env.rows * env.cols, i => {
     const { r, c } = indexToRC(env, i);
     const action = safeGetCellAction(policy, r, c);
@@ -380,7 +390,7 @@ export function getStateValueIters(
     return rcToIndex(env, newR, newC);
   });
   const iters: { value: number[]; maxDiff: number }[] = [
-    { value: rewardTensor, maxDiff: Infinity },
+    { value: initialValue, maxDiff: Infinity },
   ];
   for (let i = 0; i < numIters; i++) {
     const prev = iters[iters.length - 1]!.value;
@@ -403,8 +413,9 @@ export function getStateValue(
   reward: GridReward,
   policy: GridPolicy,
   options?: {
-    numIters: number;
-    tolerance: number;
+    initialValue?: number[];
+    numIters?: number;
+    tolerance?: number;
   },
 ): number[] {
   const iters = getStateValueIters(env, reward, policy, options);
@@ -415,15 +426,20 @@ export function optimalValueIteration(
   env: GridEnv,
   reward: GridReward,
   options?: {
+    initialValue?: number[];
     numIters?: number;
     tolerance?: number;
   },
 ): { value: number[]; policy: GridPolicy; maxDiff: number }[] {
-  const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
+  const {
+    initialValue = arr(env.rows * env.cols, () => 0),
+    numIters = Infinity,
+    tolerance = 0.001,
+  } = options ?? {};
 
   const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
     {
-      value: arr(env.rows * env.cols, () => 0),
+      value: initialValue,
       policy: createDefaultGridPolicy(),
       maxDiff: Infinity,
     },
@@ -476,12 +492,12 @@ export function optimalPolicyIteration(
     valueNumIters = Infinity,
     valueTolerance = 0.001,
   } = options ?? {};
-  const valueOptions = {
-    numIters: valueNumIters,
-    tolerance: valueTolerance,
-  };
-  const getValue = (policy: GridPolicy) => {
-    return getStateValue(env, reward, policy, valueOptions);
+  const getValue = (policy: GridPolicy, initialValue?: number[]) => {
+    return getStateValue(env, reward, policy, {
+      initialValue,
+      numIters: valueNumIters,
+      tolerance: valueTolerance,
+    });
   };
   const idlePolicy = createDefaultGridPolicy();
   const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
@@ -512,7 +528,7 @@ export function optimalPolicyIteration(
         return best.action;
       }),
     };
-    const value = getValue(newPolicy);
+    const value = getValue(newPolicy, prev.value);
     const maxDiff = value.reduce((maxDiff, val, idx) => {
       return Math.max(maxDiff, Math.abs(val - prev.value[idx]));
     }, 0);
