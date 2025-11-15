@@ -141,3 +141,7 @@ export function applyMatrixToVector(
     matrix[r].reduce((sum, value, c) => sum + value * vector[c], 0),
   );
 }
+
+export function avg(values: number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}

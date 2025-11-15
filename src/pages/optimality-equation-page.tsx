@@ -2,6 +2,13 @@ import { GridView } from "@/components/grid-view";
 import { Markdown } from "@/components/markdown";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -23,7 +30,9 @@ import {
   type GridEnv,
   type OptimalityIter,
 } from "@/lib/grid-env";
+import { arr, avg } from "@/lib/tensor";
 import { useEffect, useMemo, useState } from "react";
+import { Line, LineChart, XAxis, YAxis } from "recharts";
 
 export function ItersWithSlider({
   env,
@@ -84,7 +93,17 @@ export function ItersWithSlider({
 export function OptimalityEquationPage() {
   const [env] = useGridEnv();
   const [reward] = useGridReward();
+
   const [valueNumIters, setValueNumIters] = useState(2);
+  const [chartIters, setChartIters] = useState(30);
+
+  const preciseValue = useMemo(() => {
+    const iters = optimalValueIteration(env, reward, {
+      numIters: Infinity,
+      tolerance: 1e-6,
+    });
+    return iters[iters.length - 1]?.value ?? [];
+  }, [env, reward]);
 
   const valueIters = useMemo(() => {
     return optimalValueIteration(env, reward);
@@ -97,6 +116,39 @@ export function OptimalityEquationPage() {
       valueNumIters,
     });
   }, [env, reward, valueNumIters]);
+
+  const preciseAvg = useMemo(() => avg(preciseValue), [preciseValue]);
+  const valueItersAvg = useMemo(
+    () => valueIters.map(iter => avg(iter.value)),
+    [valueIters],
+  );
+  const policyItersAvg = useMemo(
+    () => policyIters.map(iter => avg(iter.value)),
+    [policyIters],
+  );
+  const truncatedItersAvg = useMemo(
+    () => truncatedIters.map(iter => avg(iter.value)),
+    [truncatedIters],
+  );
+
+  const chartData = useMemo(() => {
+    const safeGetAvg = (avg: number[], iter: number) => {
+      return avg[iter] ?? avg[avg.length - 1] ?? 0;
+    };
+    return arr(chartIters, i => i + 1).map(iter => ({
+      iter,
+      preciseAvg,
+      valueAvg: safeGetAvg(valueItersAvg, iter),
+      policyAvg: safeGetAvg(policyItersAvg, iter),
+      truncatedAvg: safeGetAvg(truncatedItersAvg, iter),
+    }));
+  }, [
+    preciseAvg,
+    valueItersAvg,
+    policyItersAvg,
+    truncatedItersAvg,
+    chartIters,
+  ]);
 
   const [valueActiveIter, setValueActiveIter] = useState(0);
   const [policyActiveIter, setPolicyActiveIter] = useState(0);
@@ -118,14 +170,64 @@ export function OptimalityEquationPage() {
         <CardContent>
           <div className="overflow-x-auto">
             <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-              <span>TODO: Charts</span>
+              <ChartContainer
+                className="w-full"
+                config={{
+                  preciseAvg: {
+                    label: "Precise",
+                    color: "var(--chart-1)",
+                  },
+                  valueAvg: {
+                    label: "Value Iteration",
+                    color: "var(--chart-2)",
+                  },
+                  policyAvg: {
+                    label: "Policy Iteration",
+                    color: "var(--chart-3)",
+                  },
+                  truncatedAvg: {
+                    label: `Truncated-${valueNumIters} Iteration`,
+                    color: "var(--chart-4)",
+                  },
+                }}
+              >
+                <LineChart accessibilityLayer data={chartData}>
+                  <XAxis dataKey="iter" />
+                  <YAxis dataKey="preciseAvg" />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Line
+                    type="monotone"
+                    dataKey="preciseAvg"
+                    stroke="var(--chart-1)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="valueAvg"
+                    stroke="var(--chart-2)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="policyAvg"
+                    stroke="var(--chart-3)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="truncatedAvg"
+                    stroke="var(--chart-4)"
+                  />
+                </LineChart>
+              </ChartContainer>
 
-              <div className="my-2 flex items-center gap-4 justify-center">
+              <div className="flex items-center gap-4 justify-center">
                 <label className="text-sm">
-                  <Markdown content={`Truncated Policy Iteration - $x$`} />
+                  <Markdown content={`Truncated-$x$`} />
                 </label>
                 <Select
-                  value={valueNumIters?.toString() ?? "Infinity"}
+                  value={valueNumIters.toString()}
                   onValueChange={val => setValueNumIters(Number(val))}
                 >
                   <SelectTrigger>
@@ -137,6 +239,23 @@ export function OptimalityEquationPage() {
                     <SelectItem value="4">4</SelectItem>
                     <SelectItem value="12">12</SelectItem>
                     <SelectItem value="80">80</SelectItem>
+                  </SelectContent>
+                </Select>
+                <label className="text-sm">
+                  <Markdown content={`Chart Iters`} />
+                </label>
+                <Select
+                  value={chartIters.toString()}
+                  onValueChange={val => setChartIters(Number(val))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="30">30</SelectItem>
+                    <SelectItem value="45">45</SelectItem>
+                    <SelectItem value="60">60</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
