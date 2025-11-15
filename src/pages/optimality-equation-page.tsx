@@ -195,29 +195,32 @@ export function OptimalityEquationPage() {
                   <XAxis dataKey="iter" />
                   <YAxis dataKey="preciseAvg" />
                   <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
+                    content={<ChartTooltipContent hideLabel={true} />}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
                   <Line
                     type="monotone"
                     dataKey="preciseAvg"
                     stroke="var(--chart-1)"
+                    dot={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="valueAvg"
                     stroke="var(--chart-2)"
+                    dot={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="policyAvg"
                     stroke="var(--chart-3)"
+                    dot={false}
                   />
                   <Line
                     type="monotone"
                     dataKey="truncatedAvg"
                     stroke="var(--chart-4)"
+                    dot={false}
                   />
                 </LineChart>
               </ChartContainer>
