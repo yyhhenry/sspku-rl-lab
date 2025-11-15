@@ -362,6 +362,11 @@ export function getTransitionTensor(
 
 // Bellman Optimality Equation
 
+export interface StateValueIter {
+  value: number[];
+  maxDiff: number;
+}
+
 export function getStateValueIters(
   env: GridEnv,
   reward: GridReward,
@@ -371,7 +376,7 @@ export function getStateValueIters(
     numIters?: number;
     tolerance?: number;
   },
-): { value: number[]; maxDiff: number }[] {
+): StateValueIter[] {
   const {
     initialValue = arr(env.rows * env.cols, () => 0),
     numIters = Infinity,
@@ -389,9 +394,7 @@ export function getStateValueIters(
     const { r: newR, c: newC } = getActionMove(env, r, c, action);
     return rcToIndex(env, newR, newC);
   });
-  const iters: { value: number[]; maxDiff: number }[] = [
-    { value: initialValue, maxDiff: Infinity },
-  ];
+  const iters: StateValueIter[] = [{ value: initialValue, maxDiff: Infinity }];
   for (let i = 0; i < numIters; i++) {
     const prev = iters[iters.length - 1]!.value;
     const next = rewardTensor.map(
@@ -422,6 +425,12 @@ export function getStateValue(
   return iters[iters.length - 1]!.value;
 }
 
+export interface OptimalityIter {
+  value: number[];
+  policy: GridPolicy;
+  maxDiff: number;
+}
+
 export function optimalValueIteration(
   env: GridEnv,
   reward: GridReward,
@@ -430,14 +439,14 @@ export function optimalValueIteration(
     numIters?: number;
     tolerance?: number;
   },
-): { value: number[]; policy: GridPolicy; maxDiff: number }[] {
+): OptimalityIter[] {
   const {
     initialValue = arr(env.rows * env.cols, () => 0),
     numIters = Infinity,
     tolerance = 0.001,
   } = options ?? {};
 
-  const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
+  const iters: OptimalityIter[] = [
     {
       value: initialValue,
       policy: createDefaultGridPolicy(),
@@ -485,7 +494,7 @@ export function optimalPolicyIteration(
     valueNumIters?: number;
     valueTolerance?: number;
   },
-): { value: number[]; policy: GridPolicy; maxDiff: number }[] {
+): OptimalityIter[] {
   const {
     numIters = Infinity,
     tolerance = 0.001,
@@ -500,7 +509,7 @@ export function optimalPolicyIteration(
     });
   };
   const idlePolicy = createDefaultGridPolicy();
-  const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
+  const iters: OptimalityIter[] = [
     { value: getValue(idlePolicy), policy: idlePolicy, maxDiff: Infinity },
   ];
 

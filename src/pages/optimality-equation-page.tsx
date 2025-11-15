@@ -20,59 +20,38 @@ import {
   useGridEnv,
   useGridReward,
   type GridEnv,
-  type GridPolicy,
-  type GridReward,
+  type OptimalityIter,
 } from "@/lib/grid-env";
-import { arr } from "@/lib/tensor";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
-export function OptimalValueIteration({
+export function ItersWithSlider({
   env,
-  reward,
+  iters,
+  activeIter,
+  setActiveIter,
 }: {
   env: GridEnv;
-  reward: GridReward;
+  iters: OptimalityIter[];
+  activeIter: number;
+  setActiveIter: (activeIter: number) => void;
 }) {
-  const [itersView, setItersView] = useState<{
-    activeIter: number;
-    iters: { value: number[]; policy: GridPolicy; maxDiff: number }[];
-  }>({
-    activeIter: 0,
-    iters: [
-      {
-        value: arr(env.rows * env.cols, () => 0),
-        policy: createDefaultGridPolicy(),
-        maxDiff: Infinity,
-      },
-    ],
-  });
-  useEffect(() => {
-    const iters = optimalValueIteration(env, reward);
-    setItersView({
-      activeIter: iters.length - 1,
-      iters,
-    });
-  }, [env, reward]);
   const policy = useMemo(() => {
-    return (
-      itersView.iters[itersView.activeIter]?.policy ?? createDefaultGridPolicy()
-    );
-  }, [itersView]);
+    return iters[activeIter]?.policy ?? createDefaultGridPolicy();
+  }, [iters, activeIter]);
   const valueTensor = useMemo(() => {
-    return itersView.iters[itersView.activeIter]?.value ?? [];
-  }, [itersView]);
+    return iters[activeIter]?.value ?? [];
+  }, [iters, activeIter]);
   return (
     <div className="m-2">
       <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {itersView.activeIter}:</div>
+        <div className="m-2">Iteration {activeIter}:</div>
         <div className="w-sm">
           <Slider
-            value={[itersView.activeIter]}
-            onValueChange={val =>
-              setItersView({ ...itersView, activeIter: val[0] })
-            }
+            value={[activeIter]}
+            onValueChange={val => setActiveIter(val[0])}
             min={0}
-            max={itersView.iters.length - 1}
+            max={iters.length - 1}
             step={1}
           />
         </div>
@@ -102,92 +81,38 @@ export function OptimalValueIteration({
     </div>
   );
 }
+export function OptimalityEquationPage() {
+  const [env] = useGridEnv();
+  const [reward] = useGridReward();
+  const [valueNumIters, setValueNumIters] = useState(2);
 
-export function OptimalPolicyIteration({
-  env,
-  reward,
-  valueNumIters,
-}: {
-  env: GridEnv;
-  reward: GridReward;
-  valueNumIters?: number;
-}) {
-  const [itersView, setItersView] = useState<{
-    activeIter: number;
-    iters: { value: number[]; policy: GridPolicy; maxDiff: number }[];
-  }>({
-    activeIter: 0,
-    iters: [
-      {
-        value: arr(env.rows * env.cols, () => 0),
-        policy: createDefaultGridPolicy(),
-        maxDiff: Infinity,
-      },
-    ],
-  });
-  useEffect(() => {
-    const iters = optimalPolicyIteration(env, reward, {
+  const valueIters = useMemo(() => {
+    return optimalValueIteration(env, reward);
+  }, [env, reward]);
+  const policyIters = useMemo(() => {
+    return optimalPolicyIteration(env, reward);
+  }, [env, reward]);
+  const truncatedIters = useMemo(() => {
+    return optimalPolicyIteration(env, reward, {
       valueNumIters,
     });
-    setItersView({
-      activeIter: iters.length - 1,
-      iters,
-    });
   }, [env, reward, valueNumIters]);
-  const valueTensor = useMemo(() => {
-    return itersView.iters[itersView.activeIter]?.value ?? [];
-  }, [itersView]);
-  const policy = useMemo(() => {
-    return (
-      itersView.iters[itersView.activeIter]?.policy ?? createDefaultGridPolicy()
-    );
-  }, [itersView]);
-  return (
-    <div className="m-2">
-      <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {itersView.activeIter}:</div>
-        <div className="w-sm">
-          <Slider
-            value={[itersView.activeIter]}
-            onValueChange={val =>
-              setItersView({ ...itersView, activeIter: val[0] })
-            }
-            min={0}
-            max={itersView.iters.length - 1}
-            step={1}
-          />
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-          <GridView
-            className="my-2"
-            env={env}
-            cell={(r, c) => {
-              const ActionIcon =
-                gridActionIcon[safeGetCellAction(policy, r, c)];
-              return <ActionIcon className="w-6 h-6" />;
-            }}
-          />
-          <GridView
-            className="my-2"
-            env={env}
-            cell={(r, c) => (
-              <span className="text-xs">
-                {valueTensor[rcToIndex(env, r, c)]?.toFixed(1) ?? ""}
-              </span>
-            )}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
-export function OptimalityEquationPage() {
-  const [gridEnv] = useGridEnv();
-  const [gridReward] = useGridReward();
-  const [valueNumIters, setValueNumIters] = useState(4);
+  const [valueActiveIter, setValueActiveIter] = useState(0);
+  const [policyActiveIter, setPolicyActiveIter] = useState(0);
+  const [truncatedActiveIter, setTruncatedActiveIter] = useState(0);
+
+  useEffect(() => {
+    toast.info(`Value Iteration: ${valueIters.length - 1}`);
+    setValueActiveIter(valueIters.length - 1);
+  }, [valueIters]);
+  useEffect(() => {
+    setPolicyActiveIter(policyIters.length - 1);
+  }, [policyIters]);
+  useEffect(() => {
+    setTruncatedActiveIter(truncatedIters.length - 1);
+  }, [truncatedIters]);
+
   return (
     <div className="flex justify-center">
       <Card className="w-full max-w-3xl">
@@ -205,10 +130,11 @@ export function OptimalityEquationPage() {
                   onValueChange={val => setValueNumIters(Number(val))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Value Iteration Iterations" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
                     <SelectItem value="4">4</SelectItem>
                     <SelectItem value="12">12</SelectItem>
                     <SelectItem value="80">80</SelectItem>
@@ -235,16 +161,27 @@ export function OptimalityEquationPage() {
                 </TabsList>
               </div>
               <TabsContent value="value-iteration">
-                <OptimalValueIteration env={gridEnv} reward={gridReward} />
+                <ItersWithSlider
+                  env={env}
+                  iters={valueIters}
+                  activeIter={valueActiveIter}
+                  setActiveIter={setValueActiveIter}
+                />
               </TabsContent>
               <TabsContent value="policy-iteration">
-                <OptimalPolicyIteration env={gridEnv} reward={gridReward} />
+                <ItersWithSlider
+                  env={env}
+                  iters={policyIters}
+                  activeIter={policyActiveIter}
+                  setActiveIter={setPolicyActiveIter}
+                />
               </TabsContent>
               <TabsContent value="truncated-policy-iteration">
-                <OptimalPolicyIteration
-                  env={gridEnv}
-                  reward={gridReward}
-                  valueNumIters={valueNumIters}
+                <ItersWithSlider
+                  env={env}
+                  iters={truncatedIters}
+                  activeIter={truncatedActiveIter}
+                  setActiveIter={setTruncatedActiveIter}
                 />
               </TabsContent>
             </Tabs>
