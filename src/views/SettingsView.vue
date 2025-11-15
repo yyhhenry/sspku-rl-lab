@@ -1,34 +1,36 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useColorMode } from '@vueuse/core'
-import { SunMoon } from 'lucide-vue-next'
 const { store: mode } = useColorMode()
 </script>
 <template>
   <div class="flex justify-center">
-    <div class="rounded-lg border p-4 bg-white/5 max-w-full w-180 overflow-x-auto">
-      <div class="flex items-center gap-4">
-        <span class="text-muted-foreground">Color Mode:</span>
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button variant="outline">
-              <SunMoon />
-              <span class="capitalize">{{ mode }}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem @click="mode = 'light'"> Light </DropdownMenuItem>
-            <DropdownMenuItem @click="mode = 'dark'"> Dark </DropdownMenuItem>
-            <DropdownMenuItem @click="mode = 'auto'"> System </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
+    <Card class="w-full max-w-xl">
+      <CardHeader>
+        <CardTitle>Preferences</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p class="flex items-center gap-4 my-2">
+          <span>Theme</span>
+          <Select v-model="mode">
+            <SelectTrigger>
+              <SelectValue placeholder="Theme" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">Light</SelectItem>
+              <SelectItem value="dark">Dark</SelectItem>
+              <SelectItem value="auto">System</SelectItem>
+            </SelectContent>
+          </Select>
+        </p>
+      </CardContent>
+    </Card>
   </div>
 </template>
