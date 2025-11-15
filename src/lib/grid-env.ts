@@ -367,8 +367,8 @@ export function getStateValueIters(
   reward: GridReward,
   policy: GridPolicy,
   options?: {
-    numIters: number;
-    tolerance: number;
+    numIters?: number;
+    tolerance?: number;
   },
 ): { value: number[]; maxDiff: number }[] {
   const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
@@ -415,17 +415,16 @@ export function optimalValueIteration(
   env: GridEnv,
   reward: GridReward,
   options?: {
-    numIters: number;
-    tolerance: number;
+    numIters?: number;
+    tolerance?: number;
   },
-): { value: number[]; maxDiff: number }[] {
+): { value: number[]; policy: GridPolicy; maxDiff: number }[] {
   const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
-  const idlePolicy = createDefaultGridPolicy();
-  const idleRewardTensor = getRewardTensor(env, reward, idlePolicy);
 
-  const iters: { value: number[]; maxDiff: number }[] = [
+  const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
     {
-      value: idleRewardTensor.map(val => val / (1 - reward.gamma)),
+      value: arr(env.rows * env.cols, () => 0),
+      policy: createDefaultGridPolicy(),
       maxDiff: Infinity,
     },
   ];
@@ -442,14 +441,21 @@ export function optimalValueIteration(
           const { r: newR, c: newC } = getActionMove(env, r, c, action);
           const val = getActionReward(env, reward, r, c, action);
           const newStateIndex = rcToIndex(env, newR, newC);
-          return val + reward.gamma * prev[newStateIndex];
+          return { value: val + reward.gamma * prev[newStateIndex], action };
         })
-        .reduce((maxVal, val) => Math.max(maxVal, val), -Infinity);
+        .reduce((best, curr) => (curr.value > best.value ? curr : best), {
+          value: -Infinity,
+          action: "idle" as const,
+        });
     });
-    const maxDiff = next.reduce((maxDiff, val, idx) => {
+    const value = next.map(val => val.value);
+    const actions = mat(env.rows, env.cols, (r, c) => {
+      return next[rcToIndex(env, r, c)]!.action;
+    });
+    const maxDiff = value.reduce((maxDiff, val, idx) => {
       return Math.max(maxDiff, Math.abs(val - prev[idx]));
     }, 0);
-    iters.push({ value: next, maxDiff });
+    iters.push({ value, policy: { actions }, maxDiff });
   }
   return iters;
 }
@@ -458,13 +464,15 @@ export function optimalPolicyIteration(
   env: GridEnv,
   reward: GridReward,
   options?: {
-    numIters: number;
-    valueNumIters: number;
-    valueTolerance: number;
+    numIters?: number;
+    tolerance?: number;
+    valueNumIters?: number;
+    valueTolerance?: number;
   },
-): { value: number[]; policy: GridPolicy }[] {
+): { value: number[]; policy: GridPolicy; maxDiff: number }[] {
   const {
     numIters = Infinity,
+    tolerance = 0.001,
     valueNumIters = Infinity,
     valueTolerance = 0.001,
   } = options ?? {};
@@ -476,13 +484,15 @@ export function optimalPolicyIteration(
     return getStateValue(env, reward, policy, valueOptions);
   };
   const idlePolicy = createDefaultGridPolicy();
-  const iters: { value: number[]; policy: GridPolicy }[] = [
-    { value: getValue(idlePolicy), policy: idlePolicy },
+  const iters: { value: number[]; policy: GridPolicy; maxDiff: number }[] = [
+    { value: getValue(idlePolicy), policy: idlePolicy, maxDiff: Infinity },
   ];
 
-  while (iters.length < numIters) {
-    const prev = iters[iters.length - 1].value;
-    const prevPolicy = iters[iters.length - 1].policy;
+  while (
+    iters.length < numIters &&
+    iters[iters.length - 1].maxDiff > tolerance
+  ) {
+    const prev = iters[iters.length - 1];
     const newPolicy: GridPolicy = {
       actions: mat(env.rows, env.cols, (r, c) => {
         const best = gridActionEnum
@@ -491,7 +501,7 @@ export function optimalPolicyIteration(
             const val = getActionReward(env, reward, r, c, action);
             const newStateIndex = rcToIndex(env, newR, newC);
             return {
-              value: val + reward.gamma * prev[newStateIndex],
+              value: val + reward.gamma * prev.value[newStateIndex],
               action,
             };
           })
@@ -502,22 +512,11 @@ export function optimalPolicyIteration(
         return best.action;
       }),
     };
-    iters.push({
-      value: getValue(newPolicy),
-      policy: newPolicy,
-    });
-    if (
-      arr(env.rows * env.cols, i => i).every(i => {
-        const { r, c } = indexToRC(env, i);
-        return (
-          safeGetCellAction(prevPolicy, r, c) ===
-          safeGetCellAction(newPolicy, r, c)
-        );
-      })
-    ) {
-      // No policy change
-      break;
-    }
+    const value = getValue(newPolicy);
+    const maxDiff = value.reduce((maxDiff, val, idx) => {
+      return Math.max(maxDiff, Math.abs(val - prev.value[idx]));
+    }, 0);
+    iters.push({ value, policy: newPolicy, maxDiff });
   }
   return iters;
 }

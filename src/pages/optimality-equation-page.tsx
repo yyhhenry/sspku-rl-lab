@@ -16,6 +16,7 @@ import {
   type GridPolicy,
   type GridReward,
 } from "@/lib/grid-env";
+import { arr } from "@/lib/tensor";
 import { useEffect, useMemo, useState } from "react";
 
 export function OptimalValueIteration({
@@ -27,10 +28,16 @@ export function OptimalValueIteration({
 }) {
   const [itersView, setItersView] = useState<{
     activeIter: number;
-    iters: { value: number[]; maxDiff: number }[];
+    iters: { value: number[]; policy: GridPolicy; maxDiff: number }[];
   }>({
     activeIter: 0,
-    iters: [],
+    iters: [
+      {
+        value: arr(env.rows * env.cols, () => 0),
+        policy: createDefaultGridPolicy(),
+        maxDiff: Infinity,
+      },
+    ],
   });
   useEffect(() => {
     const iters = optimalValueIteration(env, reward);
@@ -39,6 +46,11 @@ export function OptimalValueIteration({
       iters,
     });
   }, [env, reward]);
+  const policy = useMemo(() => {
+    return (
+      itersView.iters[itersView.activeIter]?.policy ?? createDefaultGridPolicy()
+    );
+  }, [itersView]);
   const valueTensor = useMemo(() => {
     return itersView.iters[itersView.activeIter]?.value ?? [];
   }, [itersView]);
@@ -63,6 +75,15 @@ export function OptimalValueIteration({
           <GridView
             className="my-2"
             env={env}
+            cell={(r, c) => {
+              const ActionIcon =
+                gridActionIcon[safeGetCellAction(policy, r, c)];
+              return <ActionIcon className="w-6 h-6" />;
+            }}
+          />
+          <GridView
+            className="my-2"
+            env={env}
             cell={(r, c) => (
               <span className="text-xs">
                 {valueTensor[rcToIndex(env, r, c)]?.toFixed(1) ?? ""}
@@ -84,10 +105,16 @@ export function OptimalPolicyIteration({
 }) {
   const [itersView, setItersView] = useState<{
     activeIter: number;
-    iters: { value: number[]; policy: GridPolicy }[];
+    iters: { value: number[]; policy: GridPolicy; maxDiff: number }[];
   }>({
     activeIter: 0,
-    iters: [],
+    iters: [
+      {
+        value: arr(env.rows * env.cols, () => 0),
+        policy: createDefaultGridPolicy(),
+        maxDiff: Infinity,
+      },
+    ],
   });
   useEffect(() => {
     const iters = optimalPolicyIteration(env, reward);
