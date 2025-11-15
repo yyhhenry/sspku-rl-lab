@@ -340,7 +340,10 @@ export function getRewardTensor(
   });
 }
 
-export function get2DTransitionTensor(env: GridEnv, policy: GridPolicy) {
+export function getTransitionTensor(
+  env: GridEnv,
+  policy: GridPolicy,
+): number[][] {
   const rows = env.rows;
   const cols = env.cols;
   const stateCount = rows * cols;
@@ -359,42 +362,51 @@ export function get2DTransitionTensor(env: GridEnv, policy: GridPolicy) {
 
 // Bellman Optimality Equation
 
-export function getTransitionMap(env: GridEnv, policy: GridPolicy): number[] {
-  return arr(env.rows * env.cols, i => {
+export function getStateValueIters(
+  env: GridEnv,
+  reward: GridReward,
+  policy: GridPolicy,
+  numIters: number = Infinity,
+  tolerance: number = 0.001,
+): { value: number[]; maxDiff: number }[] {
+  const rewardTensor = getRewardTensor(env, reward, policy);
+  const nextMove = arr(env.rows * env.cols, i => {
     const { r, c } = indexToRC(env, i);
     const action = safeGetCellAction(policy, r, c);
     const { r: newR, c: newC } = getActionMove(env, r, c, action);
     return rcToIndex(env, newR, newC);
   });
+  const iters: { value: number[]; maxDiff: number }[] = [
+    { value: rewardTensor, maxDiff: Infinity },
+  ];
+  for (let i = 0; i < numIters; i++) {
+    const prev = iters[iters.length - 1]!.value;
+    const next = rewardTensor.map(
+      (val, idx) => val + reward.gamma * prev[nextMove[idx]],
+    );
+    const maxDiff = next.reduce((maxDiff, val, idx) => {
+      return Math.max(maxDiff, Math.abs(val - prev[idx]));
+    }, 0);
+    iters.push({ value: next, maxDiff });
+    if (maxDiff < tolerance) {
+      break;
+    }
+  }
+  return iters;
 }
 
-export function getStateValueWith(
+export function getStateValue(
   env: GridEnv,
   reward: GridReward,
   policy: GridPolicy,
   numIters: number = Infinity,
   tolerance: number = 0.001,
 ): number[] {
-  const rewardTensor = getRewardTensor(env, reward, policy);
-  const transitionMap = getTransitionMap(env, policy);
-  let valueTensor = rewardTensor;
-  for (let i = 0; i < numIters; i++) {
-    const nextValueTensor = rewardTensor.map((val, idx) => {
-      const nextStateIndex = transitionMap[idx] ?? idx;
-      return val + reward.gamma * valueTensor[nextStateIndex];
-    });
-    const maxDiff = nextValueTensor.reduce((maxDiff, val, idx) => {
-      return Math.max(maxDiff, Math.abs(val - valueTensor[idx]));
-    }, 0);
-    if (maxDiff < tolerance) {
-      break;
-    }
-    valueTensor = nextValueTensor;
-  }
-  return valueTensor;
+  const iters = getStateValueIters(env, reward, policy, numIters, tolerance);
+  return iters[iters.length - 1]!.value;
 }
 
-export function applyValueIteration(
+export function optimalValueIteration(
   env: GridEnv,
   reward: GridReward,
   numIters: number = Infinity,
@@ -434,7 +446,7 @@ export function applyValueIteration(
   return iters;
 }
 
-export function getValueByPolicyIteration(
+export function optimalPolicyIteration(
   env: GridEnv,
   reward: GridReward,
   {
@@ -448,13 +460,7 @@ export function getValueByPolicyIteration(
   },
 ): { value: number[]; policy: GridPolicy }[] {
   const getValue = (policy: GridPolicy) => {
-    return getStateValueWith(
-      env,
-      reward,
-      policy,
-      valueNumIters,
-      valueTolerance,
-    );
+    return getStateValue(env, reward, policy, valueNumIters, valueTolerance);
   };
   const idlePolicy = createDefaultGridPolicy();
   const iters: { value: number[]; policy: GridPolicy }[] = [

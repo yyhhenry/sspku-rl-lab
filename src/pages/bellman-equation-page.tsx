@@ -6,9 +6,10 @@ import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  get2DTransitionTensor,
   getPolicyExamples,
   getRewardTensor,
+  getStateValueIters,
+  getTransitionTensor,
   gridActionEnum,
   gridActionIcon,
   safeGetCellAction,
@@ -67,7 +68,7 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
   );
 
   const transitionTensor = useMemo(
-    () => get2DTransitionTensor(env, policy),
+    () => getTransitionTensor(env, policy),
     [env, policy],
   );
 
@@ -133,12 +134,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
     [env, reward, policy],
   );
 
-  const transitionTensor = useMemo(
-    () => get2DTransitionTensor(env, policy),
-    [env, policy],
-  );
-
-  const [iters, setIters] = useState<{
+  const [itersView, setItersView] = useState<{
     activeIter: number;
     iters: { value: number[]; maxDiff: number }[];
   }>({
@@ -147,54 +143,43 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   });
 
   useEffect(() => {
-    const iters: { value: number[]; maxDiff: number }[] = [
-      { value: rewardTensor, maxDiff: Infinity },
-    ];
-    while (iters.length < 1000 && iters[iters.length - 1]!.maxDiff > 0.001) {
-      const prev = iters[iters.length - 1]!.value;
-      const next = applyMatrixToVector(transitionTensor, prev).map(
-        (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val,
-      );
-      const maxDiff = next.reduce((maxErr, val, idx) => {
-        const err = Math.abs(val - (prev[idx] ?? 0));
-        return err > maxErr ? err : maxErr;
-      }, 0);
-      iters.push({ value: next, maxDiff });
-    }
-    setIters({
+    const iters = getStateValueIters(env, reward, policy, 1000, 0.001);
+    setItersView({
       activeIter: iters.length - 1,
       iters,
     });
-  }, [rewardTensor, transitionTensor, reward]);
+  }, [env, reward, policy]);
 
   const valueTensor = useMemo(() => {
-    return iters.iters[iters.activeIter]?.value ?? rewardTensor;
-  }, [iters, rewardTensor]);
+    return itersView.iters[itersView.activeIter]?.value ?? rewardTensor;
+  }, [itersView, rewardTensor]);
 
   const md = useMemo(() => {
-    const k = iters.activeIter;
+    const k = itersView.activeIter;
     return [
       "$v_{k+1} = r_\\pi + \\gamma P_\\pi v_k$",
       k === 0
         ? ""
         : `$max{\\|v_{${k}} - v_{${k - 1}}\\|} = ${(
-            iters.iters[k]?.maxDiff ?? 0
+            itersView.iters[k]?.maxDiff ?? 0
           ).toFixed(6)}$`,
-      `$v_{${iters.activeIter}} = $`,
+      `$v_{${itersView.activeIter}} = $`,
       `${displayMatrix([valueTensor], 4, " ")}`,
     ].join("\n\n");
-  }, [valueTensor, iters]);
+  }, [valueTensor, itersView]);
 
   return (
     <div className="m-2">
       <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {iters.activeIter}:</div>
+        <div className="m-2">Iteration {itersView.activeIter}:</div>
         <div className="w-sm">
           <Slider
-            value={[iters.activeIter]}
-            onValueChange={val => setIters({ ...iters, activeIter: val[0] })}
+            value={[itersView.activeIter]}
+            onValueChange={val =>
+              setItersView({ ...itersView, activeIter: val[0] })
+            }
             min={0}
-            max={iters.iters.length - 1}
+            max={itersView.iters.length - 1}
             step={1}
           />
         </div>
