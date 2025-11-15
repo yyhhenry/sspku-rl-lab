@@ -1,4 +1,5 @@
 import { GridView } from "@/components/grid-view";
+import { Markdown } from "@/components/markdown";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -23,7 +24,6 @@ import {
   type OptimalityIter,
 } from "@/lib/grid-env";
 import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 
 export function ItersWithSlider({
   env,
@@ -103,7 +103,6 @@ export function OptimalityEquationPage() {
   const [truncatedActiveIter, setTruncatedActiveIter] = useState(0);
 
   useEffect(() => {
-    toast.info(`Value Iteration: ${valueIters.length - 1}`);
     setValueActiveIter(valueIters.length - 1);
   }, [valueIters]);
   useEffect(() => {
@@ -123,7 +122,7 @@ export function OptimalityEquationPage() {
 
               <div className="my-2 flex items-center gap-4 justify-center">
                 <label className="text-sm">
-                  Truncated Policy Iteration "x":
+                  <Markdown content={`Truncated Policy Iteration - $x$`} />
                 </label>
                 <Select
                   value={valueNumIters?.toString() ?? "Infinity"}
