@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   getPolicyExamples,
   getRewardTensor,
+  getStateValueIters,
   getTransitionTensor,
   gridActionEnum,
   gridActionIcon,
@@ -25,6 +26,7 @@ import {
   displayMatrix,
   identityMatrix,
   InvertMatrix,
+  mat,
   matrixAdd,
 } from "@/lib/tensor";
 import { useEffect, useMemo, useState } from "react";
@@ -39,7 +41,7 @@ interface BellmanEquationProps {
 function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
   const md = useMemo(() => {
@@ -62,12 +64,12 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
 function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
   const transitionTensor = useMemo(
-    () => getTransitionTensor(env, reward, policy),
-    [env, reward, policy]
+    () => getTransitionTensor(env, policy),
+    [env, policy],
   );
 
   const inverseTensor = useMemo(() => {
@@ -86,7 +88,7 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
       return InvertMatrix(I_minus_gamma_P);
     } catch {
       toast.error(
-        "Failed to compute inverse matrix. The policy may lead to a singular transition matrix."
+        "Failed to compute inverse matrix. The policy may lead to a singular transition matrix.",
       );
       return I;
     }
@@ -129,15 +131,10 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
 function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
-    [env, reward, policy]
+    [env, reward, policy],
   );
 
-  const transitionTensor = useMemo(
-    () => getTransitionTensor(env, reward, policy),
-    [env, reward, policy]
-  );
-
-  const [iters, setIters] = useState<{
+  const [itersView, setItersView] = useState<{
     activeIter: number;
     iters: { value: number[]; maxDiff: number }[];
   }>({
@@ -146,54 +143,43 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   });
 
   useEffect(() => {
-    const iters: { value: number[]; maxDiff: number }[] = [
-      { value: rewardTensor, maxDiff: Infinity },
-    ];
-    while (iters.length < 1000 && iters[iters.length - 1]!.maxDiff > 0.001) {
-      const prev = iters[iters.length - 1]!.value;
-      const next = applyMatrixToVector(transitionTensor, prev).map(
-        (val, idx) => (rewardTensor[idx] ?? 0) + reward.gamma * val
-      );
-      const maxDiff = next.reduce((maxErr, val, idx) => {
-        const err = Math.abs(val - (prev[idx] ?? 0));
-        return err > maxErr ? err : maxErr;
-      }, 0);
-      iters.push({ value: next, maxDiff });
-    }
-    setIters({
+    const iters = getStateValueIters(env, reward, policy);
+    setItersView({
       activeIter: iters.length - 1,
       iters,
     });
-  }, [rewardTensor, transitionTensor, reward]);
+  }, [env, reward, policy]);
 
   const valueTensor = useMemo(() => {
-    return iters.iters[iters.activeIter]?.value ?? rewardTensor;
-  }, [iters, rewardTensor]);
+    return itersView.iters[itersView.activeIter]?.value ?? rewardTensor;
+  }, [itersView, rewardTensor]);
 
   const md = useMemo(() => {
-    const k = iters.activeIter;
+    const k = itersView.activeIter;
     return [
       "$v_{k+1} = r_\\pi + \\gamma P_\\pi v_k$",
       k === 0
         ? ""
         : `$max{\\|v_{${k}} - v_{${k - 1}}\\|} = ${(
-            iters.iters[k]?.maxDiff ?? 0
+            itersView.iters[k]?.maxDiff ?? 0
           ).toFixed(6)}$`,
-      `$v_{${iters.activeIter}} = $`,
+      `$v_{${itersView.activeIter}} = $`,
       `${displayMatrix([valueTensor], 4, " ")}`,
     ].join("\n\n");
-  }, [valueTensor, iters]);
+  }, [valueTensor, itersView]);
 
   return (
     <div className="m-2">
       <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {iters.activeIter}:</div>
+        <div className="m-2">Iteration {itersView.activeIter}:</div>
         <div className="w-sm">
           <Slider
-            value={[iters.activeIter]}
-            onValueChange={val => setIters({ ...iters, activeIter: val[0] })}
+            value={[itersView.activeIter]}
+            onValueChange={val =>
+              setItersView({ ...itersView, activeIter: val[0] })
+            }
             min={0}
-            max={iters.iters.length - 1}
+            max={itersView.iters.length - 1}
             step={1}
           />
         </div>
@@ -218,7 +204,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   );
 }
 
-export function BellmanEquationsPage() {
+export function BellmanEquationPage() {
   const [gridEnv] = useGridEnv();
   const [gridReward] = useGridReward();
   const [gridPolicy, setGridPolicy] = useGridPolicy();
@@ -227,12 +213,10 @@ export function BellmanEquationsPage() {
     const action = safeGetCellAction(gridPolicy, r, c);
     const actionIdx = gridActionEnum.findIndex(v => v === action);
     const newAction = gridActionEnum[(actionIdx + 1) % gridActionEnum.length];
-    const newActions = Array.from({ length: gridEnv.rows }, (_, row) =>
-      Array.from({ length: gridEnv.cols }, (_, col) =>
-        row === r && col === c
-          ? newAction
-          : safeGetCellAction(gridPolicy, row, col)
-      )
+    const newActions = mat(gridEnv.rows, gridEnv.cols, (newR, newC) =>
+      newR === r && newC === c
+        ? newAction
+        : safeGetCellAction(gridPolicy, newR, newC),
     );
     setGridPolicy({ ...gridPolicy, actions: newActions });
   };
@@ -251,7 +235,7 @@ export function BellmanEquationsPage() {
                 >
                   {example.name}
                 </Button>
-              )
+              ),
             )}
           </div>
         </CardHeader>

@@ -1,4 +1,5 @@
 import { gridCellColor, safeGetCell, type GridEnv } from "@/lib/grid-env";
+import { arr } from "@/lib/tensor";
 import { cn } from "@/lib/utils";
 
 export function GridView({
@@ -16,15 +17,15 @@ export function GridView({
     <div className={cn("flex justify-center", className)}>
       <table className="border-collapse">
         <tbody>
-          {Array.from({ length: env.rows }, (_, r) => (
+          {arr(env.rows, r => (
             <tr key={r}>
-              {Array.from({ length: env.cols }, (_, c) => (
+              {arr(env.cols, c => (
                 <td key={c} className="p-0">
                   <div
                     onClick={() => onClick?.(r, c)}
                     className={cn(
                       "w-10 h-10 flex items-center justify-center border cursor-pointer select-none hover:border-3 hover:border-blue-400 transition-border duration-150",
-                      gridCellColor[safeGetCell(env, r, c)]
+                      gridCellColor[safeGetCell(env, r, c)],
                     )}
                   >
                     {cell?.(r, c)}

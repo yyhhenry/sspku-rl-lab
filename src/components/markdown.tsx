@@ -1,21 +1,15 @@
-import DOMPurify from "dompurify";
 import hljs from "highlight.js/lib/common";
 import "highlight.js/styles/github-dark.min.css";
-import { marked, type Token, type Tokens } from "marked";
-import markedKatex from "marked-katex-extension";
+import "katex/dist/katex.min.css";
+import type React from "react";
 import { useMemo } from "react";
+import type { Components } from "react-markdown";
+import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-
-marked.use(
-  markedKatex({
-    throwOnError: false,
-    output: "mathml",
-    nonStandard: true,
-    strict: false,
-  })
-);
 
 /**
  * Transfer inline `\( ... \)` and  block `\[ ... \]` formulas to katex format.
@@ -36,16 +30,6 @@ function bracketsFormulaToKatex(content: string) {
   );
 
   return content;
-}
-
-function markedLex(content: string) {
-  content = bracketsFormulaToKatex(content);
-
-  return marked.lexer(content);
-}
-function markedParse(tokens: Token | Token[]) {
-  tokens = Array.isArray(tokens) ? tokens : [tokens];
-  return DOMPurify.sanitize(marked.parser(tokens));
 }
 
 export function CodeBlock(props: { code: string; lang: string }) {
@@ -84,26 +68,64 @@ export function CodeBlock(props: { code: string; lang: string }) {
   );
 }
 
+/**
+ * Extract code block information from react-markdown's pre children
+ */
+function extractCodeBlock(children: React.ReactNode):
+  | {
+      code: string;
+      lang: string;
+    }
+  | undefined {
+  if (
+    !children ||
+    typeof children !== "object" ||
+    !("props" in children) ||
+    !children.props
+  ) {
+    return;
+  }
+
+  const props = children.props as {
+    className?: string;
+    children?: React.ReactNode;
+  };
+  const className = props.className || "";
+  const match = /language-(\w+)/.exec(className);
+
+  if (!match) {
+    return;
+  }
+
+  const lang = match[1];
+  const code = props.children ? String(props.children).replace(/\n$/, "") : "";
+
+  return { code, lang };
+}
+
+const markdownComponents: Components = {
+  pre: ({ children, ...props }) => {
+    const codeBlock = extractCodeBlock(children);
+    if (codeBlock) {
+      return <CodeBlock code={codeBlock.code} lang={codeBlock.lang} />;
+    }
+    return <pre {...props}>{children}</pre>;
+  },
+};
+
 export function Markdown(props: { content: string }) {
-  const tokens = useMemo(() => markedLex(props.content), [props.content]);
+  const processedContent = useMemo(
+    () => bracketsFormulaToKatex(props.content),
+    [props.content]
+  );
 
   return (
-    <div>
-      {tokens.map(token => {
-        if (token.type === "code") {
-          const codeToken = token as Tokens.Code;
-          return (
-            <CodeBlock
-              code={codeToken.text}
-              lang={codeToken.lang ?? "plaintext"}
-            />
-          );
-        } else {
-          return (
-            <div dangerouslySetInnerHTML={{ __html: markedParse(token) }} />
-          );
-        }
-      })}
-    </div>
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={markdownComponents}
+    >
+      {processedContent}
+    </ReactMarkdown>
   );
 }
