@@ -366,9 +366,12 @@ export function getStateValueIters(
   env: GridEnv,
   reward: GridReward,
   policy: GridPolicy,
-  numIters: number = Infinity,
-  tolerance: number = 0.001,
+  options?: {
+    numIters: number;
+    tolerance: number;
+  },
 ): { value: number[]; maxDiff: number }[] {
+  const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
   const rewardTensor = getRewardTensor(env, reward, policy);
   const nextMove = arr(env.rows * env.cols, i => {
     const { r, c } = indexToRC(env, i);
@@ -399,19 +402,24 @@ export function getStateValue(
   env: GridEnv,
   reward: GridReward,
   policy: GridPolicy,
-  numIters: number = Infinity,
-  tolerance: number = 0.001,
+  options?: {
+    numIters: number;
+    tolerance: number;
+  },
 ): number[] {
-  const iters = getStateValueIters(env, reward, policy, numIters, tolerance);
+  const iters = getStateValueIters(env, reward, policy, options);
   return iters[iters.length - 1]!.value;
 }
 
 export function optimalValueIteration(
   env: GridEnv,
   reward: GridReward,
-  numIters: number = Infinity,
-  tolerance: number = 0.001,
+  options?: {
+    numIters: number;
+    tolerance: number;
+  },
 ): { value: number[]; maxDiff: number }[] {
+  const { numIters = Infinity, tolerance = 0.001 } = options ?? {};
   const idlePolicy = createDefaultGridPolicy();
   const idleRewardTensor = getRewardTensor(env, reward, idlePolicy);
 
@@ -449,18 +457,23 @@ export function optimalValueIteration(
 export function optimalPolicyIteration(
   env: GridEnv,
   reward: GridReward,
-  {
-    numIters = Infinity,
-    valueNumIters = Infinity,
-    valueTolerance = 0.001,
-  }: {
+  options?: {
     numIters: number;
     valueNumIters: number;
     valueTolerance: number;
   },
 ): { value: number[]; policy: GridPolicy }[] {
+  const {
+    numIters = Infinity,
+    valueNumIters = Infinity,
+    valueTolerance = 0.001,
+  } = options ?? {};
+  const valueOptions = {
+    numIters: valueNumIters,
+    tolerance: valueTolerance,
+  };
   const getValue = (policy: GridPolicy) => {
-    return getStateValue(env, reward, policy, valueNumIters, valueTolerance);
+    return getStateValue(env, reward, policy, valueOptions);
   };
   const idlePolicy = createDefaultGridPolicy();
   const iters: { value: number[]; policy: GridPolicy }[] = [

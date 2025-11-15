@@ -143,7 +143,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   });
 
   useEffect(() => {
-    const iters = getStateValueIters(env, reward, policy, 1000, 0.001);
+    const iters = getStateValueIters(env, reward, policy);
     setItersView({
       activeIter: iters.length - 1,
       iters,
