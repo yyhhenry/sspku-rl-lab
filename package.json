@@ -1,8 +1,10 @@
 {
   "name": "sspku-rl-lab",
-  "private": true,
-  "version": "0.0.0",
+  "description": "SSPKU Reinforcement Learning Lab",
+  "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
