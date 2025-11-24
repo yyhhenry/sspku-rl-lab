@@ -1,5 +1,6 @@
 import { GridView } from "@/components/grid-view";
 import { Markdown } from "@/components/markdown";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
@@ -69,21 +70,20 @@ function EpsilonGreedyOptimality() {
 function EpsilonExplorationAnalysis() {
   const [env] = useGridEnv();
   const [epsilon, setEpsilon] = useState("1.0");
-  const [episodeLength, setEpisodeLength] = useState("100");
+  const [episodeLength, setEpisodeLength] = useState(100);
+  const [runKey, setRunKey] = useState(0);
 
   const [stateActionCount, setStateActionCount] = useState<
     Record<string, number>
   >({});
 
   useEffect(() => {
-    explorationAnalysisDemo(
-      env,
-      parseFloat(epsilon),
-      parseInt(episodeLength),
-    ).then(({ stateActionCount }) => {
-      setStateActionCount(stateActionCount);
-    });
-  }, [env, epsilon, episodeLength]);
+    explorationAnalysisDemo(env, parseFloat(epsilon), episodeLength).then(
+      ({ stateActionCount }) => {
+        setStateActionCount(stateActionCount);
+      },
+    );
+  }, [env, epsilon, episodeLength, runKey]);
 
   const maxCount = useMemo(
     () => Object.values(stateActionCount).reduce((a, b) => Math.max(a, b), 0),
@@ -92,6 +92,21 @@ function EpsilonExplorationAnalysis() {
 
   return (
     <div className="m-2">
+      <div>
+        <label>Examples:</label>
+        {[1e2, 1e3, 1e4, 1e6].map(option => (
+          <Button
+            key={option}
+            variant="link"
+            onClick={() => {
+              setEpisodeLength(option);
+              setRunKey(prev => prev + 1);
+            }}
+          >
+            {option} steps
+          </Button>
+        ))}
+      </div>
       <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
         <label className="text-sm">
           <Markdown content={"$\\varepsilon$ value:"} />
@@ -106,19 +121,11 @@ function EpsilonExplorationAnalysis() {
           </SelectContent>
         </Select>
 
-        <label className="text-sm">Episode Length:</label>
-        <Select value={episodeLength} onValueChange={setEpisodeLength}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10 steps</SelectItem>
-            <SelectItem value="100">100 steps</SelectItem>
-            <SelectItem value="1000">1,000 steps</SelectItem>
-            <SelectItem value="10000">10,000 steps</SelectItem>
-            <SelectItem value="1000000">1,000,000 steps</SelectItem>
-          </SelectContent>
-        </Select>
+        <label>
+          <Markdown
+            content={"Episode Length: **" + episodeLength + "** steps"}
+          />
+        </label>
       </div>
 
       <div className="overflow-x-auto">
