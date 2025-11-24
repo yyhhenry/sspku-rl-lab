@@ -39,7 +39,7 @@ export function epsilonGreedy(
 export function gridEpisode(
   env: GridEnv,
   policy: GridPolicy,
-  steps: number,
+  episodeLength: number,
   epsilon: number,
   start: {
     r: number;
@@ -49,7 +49,7 @@ export function gridEpisode(
 ): GridEpisode {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
-  for (const _ of range(steps)) {
+  for (const _ of range(episodeLength)) {
     const greedyAction = safeGetCellAction(policy, r, c);
     const action = epsilonGreedy(epsilon, greedyAction);
     episode.push({ r, c, action });
@@ -74,3 +74,9 @@ export function countStateActionInEpisode(
   }
   return count;
 }
+
+export function explorationAnalysisDemo(
+  env: GridEnv,
+  epsilon: number,
+  episodeLength: number,
+) {}

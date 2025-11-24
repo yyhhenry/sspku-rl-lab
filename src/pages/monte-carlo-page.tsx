@@ -14,7 +14,7 @@ import { useState } from "react";
 
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
-  const [epsilon, setEpsilon] = useState("0.0");
+  const [epsilon, setEpsilon] = useState(0.0);
 
   return (
     <div className="m-2">
@@ -22,7 +22,10 @@ function EpsilonGreedyOptimality() {
         <label className="text-sm">
           <Markdown content={"$\\varepsilon$ value:"} />
         </label>
-        <Select value={epsilon} onValueChange={setEpsilon}>
+        <Select
+          value={epsilon.toString()}
+          onValueChange={s => setEpsilon(parseFloat(s))}
+        >
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -61,8 +64,8 @@ function EpsilonGreedyOptimality() {
 
 function EpsilonExplorationAnalysis() {
   const [env] = useGridEnv();
-  const [epsilon, setEpsilon] = useState("1.0");
-  const [episodeLength, setEpisodeLength] = useState("100");
+  const [epsilon, setEpsilon] = useState(1.0);
+  const [episodeLength, setEpisodeLength] = useState(100);
 
   return (
     <div className="m-2">
@@ -70,7 +73,10 @@ function EpsilonExplorationAnalysis() {
         <label className="text-sm">
           <Markdown content={"$\\varepsilon$ value:"} />
         </label>
-        <Select value={epsilon} onValueChange={setEpsilon}>
+        <Select
+          value={epsilon.toString()}
+          onValueChange={s => setEpsilon(parseFloat(s))}
+        >
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -81,7 +87,10 @@ function EpsilonExplorationAnalysis() {
         </Select>
 
         <label className="text-sm">Episode Length:</label>
-        <Select value={episodeLength} onValueChange={setEpisodeLength}>
+        <Select
+          value={episodeLength.toString()}
+          onValueChange={s => setEpisodeLength(parseInt(s))}
+        >
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
