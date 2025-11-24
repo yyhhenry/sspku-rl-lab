@@ -1,5 +1,4 @@
 import { GridView } from "@/components/grid-view";
-import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -9,13 +8,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -45,6 +37,7 @@ function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
   const [reward] = useGridReward();
   const [epsilon, setEpsilon] = useState("0.2");
+  const [runKey, setRunKey] = useState(0);
 
   const [iters, setIters] = useState<MonteCarloIterInfo[]>([]);
   const [activeIter, setActiveIter] = useState(0);
@@ -64,7 +57,7 @@ function EpsilonGreedyOptimality() {
     return () => {
       mounted = false;
     };
-  }, [env, reward, epsilon]);
+  }, [env, reward, epsilon, runKey]);
 
   const policy = useMemo(
     () => (iters.length === 0 ? undefined : iters[activeIter]?.policy),
@@ -86,21 +79,20 @@ function EpsilonGreedyOptimality() {
 
   return (
     <div className="m-2">
-      <div className="flex items-center justify-center gap-4 flex-wrap mb-2">
-        <label className="text-sm">
-          <Markdown content={"$\\varepsilon$ value:"} />
-        </label>
-        <Select value={epsilon} onValueChange={setEpsilon}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="0.0">0.0</SelectItem>
-            <SelectItem value="0.1">0.1</SelectItem>
-            <SelectItem value="0.2">0.2</SelectItem>
-            <SelectItem value="0.5">0.5</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex my-2 gap-2 items-center">
+        <label className="m-2">ε:</label>
+        {["0.0", "0.1", "0.2", "0.5"].map(option => (
+          <Button
+            key={option}
+            variant={option === epsilon ? "default" : "link"}
+            onClick={() => {
+              setEpsilon(option);
+              setRunKey(prev => prev + 1);
+            }}
+          >
+            {option}
+          </Button>
+        ))}
       </div>
       <div className="mb-4 flex items-center justify-center">
         <div className="m-2">Iteration {activeIter}:</div>
@@ -195,11 +187,11 @@ function EpsilonExplorationAnalysis() {
     return () => {
       mounted = false;
     };
-  }, [env, epsilon, episodeLength, runKey]);
+  }, [env, policy, epsilon, episodeLength, runKey]);
 
   const maxCount = useMemo(
     () => Object.values(stateActionCount).reduce((a, b) => Math.max(a, b), 0),
-    [env, stateActionCount],
+    [stateActionCount],
   );
 
   const chartData = useMemo(() => {
@@ -222,38 +214,35 @@ function EpsilonExplorationAnalysis() {
 
   return (
     <div className="m-2">
-      <div>
-        <label>Examples:</label>
+      <div className="flex my-2 gap-2 items-center">
+        <label className="m-2">Episode Length:</label>
         {[1e2, 1e3, 1e4, 1e6].map(option => (
           <Button
             key={option}
-            variant="link"
+            variant={option === episodeLength ? "default" : "link"}
             onClick={() => {
               setEpisodeLength(option);
               setRunKey(prev => prev + 1);
             }}
           >
-            {option} steps
+            {option}
           </Button>
         ))}
       </div>
-      <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
-        <label className="text-sm">
-          <Markdown content={"$\\varepsilon$ value:"} />
-        </label>
-        <Select value={epsilon} onValueChange={setEpsilon}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1.0">1.0</SelectItem>
-            <SelectItem value="0.5">0.5</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <label>
-          <Markdown content={`Episode Length: **${episodeLength}** steps`} />
-        </label>
+      <div className="flex my-2 gap-2 items-center">
+        <label className="m-2">ε:</label>
+        {["1.0", "0.5"].map(option => (
+          <Button
+            key={option}
+            variant={option === epsilon ? "default" : "link"}
+            onClick={() => {
+              setEpsilon(option);
+              setRunKey(prev => prev + 1);
+            }}
+          >
+            {option}
+          </Button>
+        ))}
       </div>
 
       <div className="overflow-x-auto">
@@ -262,7 +251,7 @@ function EpsilonExplorationAnalysis() {
             Use policy in "Bellman Equation" Page
           </div>
           <GridView
-            className="my-2"
+            className="m-4"
             env={env}
             cell={(r, c) => {
               return (
