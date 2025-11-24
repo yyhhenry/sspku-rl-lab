@@ -3,6 +3,11 @@ import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -15,10 +20,12 @@ import {
   gridActionIcon,
   gridActionTransform,
   useGridEnv,
+  useGridPolicy,
 } from "@/lib/grid-env";
 import { explorationAnalysisDemo } from "@/lib/monte-carlo";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
@@ -69,6 +76,7 @@ function EpsilonGreedyOptimality() {
 
 function EpsilonExplorationAnalysis() {
   const [env] = useGridEnv();
+  const [policy] = useGridPolicy();
   const [epsilon, setEpsilon] = useState("1.0");
   const [episodeLength, setEpisodeLength] = useState(100);
   const [runKey, setRunKey] = useState(0);
@@ -78,17 +86,41 @@ function EpsilonExplorationAnalysis() {
   >({});
 
   useEffect(() => {
-    explorationAnalysisDemo(env, parseFloat(epsilon), episodeLength).then(
-      ({ stateActionCount }) => {
-        setStateActionCount(stateActionCount);
-      },
-    );
+    explorationAnalysisDemo(
+      env,
+      policy,
+      parseFloat(epsilon),
+      episodeLength,
+    ).then(({ stateActionCount }) => {
+      setStateActionCount(stateActionCount);
+    });
   }, [env, epsilon, episodeLength, runKey]);
 
   const maxCount = useMemo(
     () => Object.values(stateActionCount).reduce((a, b) => Math.max(a, b), 0),
     [env, stateActionCount],
   );
+
+  const showBarChart = env.rows * env.cols <= 25;
+
+  const chartData = useMemo(() => {
+    if (!showBarChart) return [];
+
+    const data: Array<{ name: string; count: number }> = [];
+    for (let r = 0; r < env.rows; r++) {
+      for (let c = 0; c < env.cols; c++) {
+        for (const action of gridActionEnum) {
+          const key = `${r},${c},${action}`;
+          const count = stateActionCount[key] ?? 0;
+          data.push({
+            name: key,
+            count,
+          });
+        }
+      }
+    }
+    return data;
+  }, [env, stateActionCount, showBarChart]);
 
   return (
     <div className="m-2">
@@ -122,14 +154,15 @@ function EpsilonExplorationAnalysis() {
         </Select>
 
         <label>
-          <Markdown
-            content={"Episode Length: **" + episodeLength + "** steps"}
-          />
+          <Markdown content={`Episode Length: **${episodeLength}** steps`} />
         </label>
       </div>
 
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
+          <div className="text-xs text-muted-foreground">
+            Use policy in "Bellman Equation" Page
+          </div>
           <GridView
             className="my-2"
             env={env}
@@ -162,6 +195,30 @@ function EpsilonExplorationAnalysis() {
               );
             }}
           />
+
+          {showBarChart && (
+            <div className="w-full">
+              <ChartContainer
+                config={{
+                  count: {
+                    label: "Frequency",
+                    color: "var(--chart-1)",
+                  },
+                }}
+              >
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" tick={false} />
+                  <YAxis />
+                  <ChartTooltip
+                    content={<ChartTooltipContent />}
+                    cursor={{ fill: "rgba(128, 128, 128, 0.2)" }}
+                  />
+                  <Bar dataKey="count" fill="var(--color-count)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </div>
+          )}
         </div>
       </div>
     </div>

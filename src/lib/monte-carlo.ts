@@ -1,5 +1,4 @@
 import {
-  createDefaultGridPolicy,
   getActionMove,
   gridActionEnum,
   safeGetCellAction,
@@ -84,11 +83,11 @@ export function countStateAction(
 
 export async function explorationAnalysisDemo(
   env: GridEnv,
+  policy: GridPolicy,
   epsilon: number,
   episodeLength: number,
 ) {
   const start: GridEpisodeStep = { r: 0, c: 0, action: "idle" };
-  const policy = createDefaultGridPolicy();
   const episode = await generateEpisode(
     env,
     policy,
