@@ -2,8 +2,8 @@ import {
   createDefaultGridPolicy,
   getActionMove,
   getActionReward,
-  getStateValue,
   gridActionEnum,
+  indexToRC,
   safeGetCellAction,
   type GridAction,
   type GridEnv,
@@ -105,7 +105,7 @@ export async function explorationAnalysisDemo(
 
 export interface MonteCarloIterInfo {
   policy: GridPolicy;
-  value: number[];
+  value: number[][];
   maxError: number;
 }
 
@@ -117,23 +117,15 @@ export async function monteCarloDemo(
     episodeLength = 1000,
     maxIters = Infinity,
     tolerance = 1e-4,
+    touchAtLeast = 5,
   }: {
     epsilon?: number;
     episodeLength?: number;
     maxIters?: number;
     tolerance?: number;
+    touchAtLeast?: number;
   } = {},
 ) {
-  const idlePolicy = createDefaultGridPolicy();
-
-  const iters: MonteCarloIterInfo[] = [
-    {
-      policy: idlePolicy,
-      value: getStateValue(env, reward, idlePolicy),
-      maxError: Infinity,
-    },
-  ];
-
   const cellCounter = mat(
     env.rows,
     env.cols,
@@ -145,6 +137,22 @@ export async function monteCarloDemo(
 
   const avg = ({ sum, n }: { sum: number; n: number }) =>
     n === 0 ? -Infinity : sum / n;
+
+  const getValue = (policy: GridPolicy) =>
+    mat(env.rows, env.cols, (r, c) => {
+      const cell = cellCounter[r][c];
+      const action = safeGetCellAction(policy, r, c);
+      return avg(cell[action]);
+    });
+
+  const idlePolicy = createDefaultGridPolicy();
+  const iters: MonteCarloIterInfo[] = [
+    {
+      policy: idlePolicy,
+      value: getValue(idlePolicy),
+      maxError: Infinity,
+    },
+  ];
 
   while (iters.length < maxIters) {
     const lastIter = iters[iters.length - 1];
@@ -185,12 +193,19 @@ export async function monteCarloDemo(
         gridActionEnum[0],
       );
     }
-    const newValue = getStateValue(env, reward, newPolicy);
-    const maxError = arr(env.rows * env.cols, i =>
-      Math.abs(newValue[i] - lastIter.value[i]),
-    ).reduce((a, b) => Math.max(a, b), 0);
+    const newValue = getValue(newPolicy);
+    const maxError = arr(env.rows * env.cols, i => {
+      const { r, c } = indexToRC(env, i);
+      return Math.abs(newValue[r][c] - lastIter.value[r][c]);
+    }).reduce((a, b) => Math.max(a, b), 0);
+    const allTouched = range(env.rows).every(r =>
+      range(env.cols).every(c => {
+        const cell = cellCounter[r][c];
+        return gridActionEnum.every(action => cell[action].n > touchAtLeast);
+      }),
+    );
     iters.push({ policy: newPolicy, value: newValue, maxError });
-    if (maxError < tolerance) {
+    if (allTouched && maxError < tolerance) {
       break;
     }
     await Promise.resolve();
