@@ -235,7 +235,9 @@ export async function monteCarloDemo(
       // Stop when stable condition holds for consecutive rounds after minIters
       break;
     }
-    await asyncImmediate();
+    if (iters.length % Math.ceil(10000 / episodeLength) === 0) {
+      await asyncImmediate();
+    }
     if (isAlive !== undefined && !isAlive()) {
       break;
     }
