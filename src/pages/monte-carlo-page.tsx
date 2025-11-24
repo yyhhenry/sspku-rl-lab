@@ -79,6 +79,11 @@ function EpsilonExplorationAnalysis() {
     );
   }, [env, epsilon, episodeLength]);
 
+  const maxCount = useMemo(
+    () => Object.values(stateActionCount).reduce((a, b) => Math.max(a, b), 0),
+    [env, stateActionCount],
+  );
+
   return (
     <div className="m-2">
       <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
@@ -120,14 +125,19 @@ function EpsilonExplorationAnalysis() {
                 <>
                   {gridActionEnum.map(action => {
                     const ActionIcon = gridActionIcon[action];
-                    const count = stateActionCount({ r, c, action });
+                    const curCount =
+                      stateActionCount[`${r},${c},${action}`] ?? 0;
+                    const opacity =
+                      curCount > 0
+                        ? Math.min(1, Math.log10(curCount + 1) / 2)
+                        : 0;
                     return (
                       <span
                         className={cn(
                           "absolute text-xs",
-                          `opacity-${Math.min(100, count * 10)}`,
                           gridActionTransform[action],
                         )}
+                        style={{ opacity }}
                         key={action}
                       >
                         <ActionIcon />
