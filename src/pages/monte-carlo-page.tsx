@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { gridActionIcon, useGridEnv } from "@/lib/grid-env";
 import { useState } from "react";
@@ -46,10 +45,6 @@ function EpsilonGreedyOptimality() {
               return <ActionIcon />;
             }}
           />
-
-          <Separator className="my-2" />
-
-          <div className="text-sm font-medium">State Value Function</div>
 
           <GridView
             className="my-2"
@@ -112,7 +107,7 @@ export function MonteCarloPage() {
     <div className="flex justify-center">
       <Card className="w-full max-w-3xl">
         <CardContent>
-          <Tabs defaultValue="exploration">
+          <Tabs defaultValue="optimality">
             <div className="overflow-x-auto">
               <TabsList className="w-fit min-w-full">
                 <TabsTrigger value="optimality">
