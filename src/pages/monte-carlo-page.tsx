@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -101,26 +103,23 @@ function EpsilonExplorationAnalysis() {
     [env, stateActionCount],
   );
 
-  const showBarChart = env.rows * env.cols <= 25;
-
   const chartData = useMemo(() => {
-    if (!showBarChart) return [];
-
-    const data: Array<{ name: string; count: number }> = [];
+    const data: Array<{ state: string; [key: string]: string | number }> = [];
     for (let r = 0; r < env.rows; r++) {
       for (let c = 0; c < env.cols; c++) {
+        const stateData: { state: string; [key: string]: string | number } = {
+          state: `(${r},${c})`,
+        };
         for (const action of gridActionEnum) {
           const key = `${r},${c},${action}`;
           const count = stateActionCount[key] ?? 0;
-          data.push({
-            name: key,
-            count,
-          });
+          stateData[action] = count;
         }
+        data.push(stateData);
       }
     }
     return data;
-  }, [env, stateActionCount, showBarChart]);
+  }, [env, stateActionCount]);
 
   return (
     <div className="m-2">
@@ -196,29 +195,73 @@ function EpsilonExplorationAnalysis() {
             }}
           />
 
-          {showBarChart && (
-            <div className="w-full">
-              <ChartContainer
-                config={{
-                  count: {
-                    label: "Frequency",
-                    color: "var(--chart-1)",
-                  },
-                }}
-              >
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={false} />
-                  <YAxis />
-                  <ChartTooltip
-                    content={<ChartTooltipContent />}
-                    cursor={{ fill: "rgba(128, 128, 128, 0.2)" }}
-                  />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={4} />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          )}
+          <div className="w-full">
+            <ChartContainer
+              config={{
+                idle: {
+                  label: "Idle",
+                  color: "var(--chart-1)",
+                },
+                right: {
+                  label: "Right",
+                  color: "var(--chart-2)",
+                },
+                down: {
+                  label: "Down",
+                  color: "var(--chart-3)",
+                },
+                left: {
+                  label: "Left",
+                  color: "var(--chart-4)",
+                },
+                up: {
+                  label: "Up",
+                  color: "var(--chart-5)",
+                },
+              }}
+            >
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="state" tick={false} />
+                <YAxis />
+                <ChartLegend content={<ChartLegendContent />} />
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                  cursor={{ fill: "rgba(128, 128, 128, 0.2)" }}
+                />
+                <Bar
+                  dataKey="idle"
+                  stackId="a"
+                  fill="var(--color-idle)"
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="right"
+                  stackId="a"
+                  fill="var(--color-right)"
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="down"
+                  stackId="a"
+                  fill="var(--color-down)"
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="left"
+                  stackId="a"
+                  fill="var(--color-left)"
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="up"
+                  stackId="a"
+                  fill="var(--color-up)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
+          </div>
         </div>
       </div>
     </div>
