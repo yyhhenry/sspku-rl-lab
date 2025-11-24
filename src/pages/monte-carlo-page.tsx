@@ -127,9 +127,12 @@ function EpsilonExplorationAnalysis() {
                     const ActionIcon = gridActionIcon[action];
                     const curCount =
                       stateActionCount[`${r},${c},${action}`] ?? 0;
+                    // 使用平方根归一化：让小值快速可见，大值区分度降低
+                    // 0 -> 0, 有值 -> 至少0.3, maxCount -> 1.0
                     const opacity =
                       curCount > 0
-                        ? Math.min(1, Math.log10(curCount + 1) / 2)
+                        ? 0.3 +
+                          0.7 * Math.sqrt(curCount / Math.max(1, maxCount))
                         : 0;
                     return (
                       <span
