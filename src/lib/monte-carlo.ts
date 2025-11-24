@@ -105,7 +105,7 @@ export async function explorationAnalysisDemo(
 
 export interface MonteCarloIterInfo {
   policy: GridPolicy;
-  value: number[][];
+  actionValue: Record<GridAction, number>[][];
   maxError: number;
 }
 
@@ -115,15 +115,13 @@ export async function monteCarloDemo(
   {
     epsilon = 0.2,
     episodeLength = 1000,
-    maxIters = Infinity,
-    tolerance = 1e-4,
-    touchAtLeast = 5,
+    maxIters = 1000,
+    tolerance = 0.001,
   }: {
     epsilon?: number;
     episodeLength?: number;
     maxIters?: number;
     tolerance?: number;
-    touchAtLeast?: number;
   } = {},
 ) {
   const cellCounter = mat(
@@ -136,20 +134,20 @@ export async function monteCarloDemo(
   );
 
   const avg = ({ sum, n }: { sum: number; n: number }) =>
-    n === 0 ? -Infinity : sum / n;
+    n === 0 ? 0 : sum / n;
 
-  const getValue = (policy: GridPolicy) =>
-    mat(env.rows, env.cols, (r, c) => {
-      const cell = cellCounter[r][c];
-      const action = safeGetCellAction(policy, r, c);
-      return avg(cell[action]);
-    });
+  const getCellValue = (r: number, c: number) => {
+    const cell = cellCounter[r][c];
+    return Object.fromEntries(
+      gridActionEnum.map(action => [action, avg(cell[action])]),
+    ) as Record<GridAction, number>;
+  };
 
   const idlePolicy = createDefaultGridPolicy();
   const iters: MonteCarloIterInfo[] = [
     {
       policy: idlePolicy,
-      value: getValue(idlePolicy),
+      actionValue: mat(env.rows, env.cols, getCellValue),
       maxError: Infinity,
     },
   ];
@@ -193,19 +191,31 @@ export async function monteCarloDemo(
         gridActionEnum[0],
       );
     }
-    const newValue = getValue(newPolicy);
+    const newValue = mat(env.rows, env.cols, getCellValue);
     const maxError = arr(env.rows * env.cols, i => {
       const { r, c } = indexToRC(env, i);
-      return Math.abs(newValue[r][c] - lastIter.value[r][c]);
+      return gridActionEnum.reduce((maxActError, action) => {
+        const lastAvg = lastIter.actionValue[r][c][action];
+        const newAvg = newValue[r][c][action];
+        return Math.max(maxActError, Math.abs(newAvg - lastAvg));
+      }, 0);
     }).reduce((a, b) => Math.max(a, b), 0);
     const allTouched = range(env.rows).every(r =>
       range(env.cols).every(c => {
         const cell = cellCounter[r][c];
-        return gridActionEnum.every(action => cell[action].n > touchAtLeast);
+        return gridActionEnum.every(action => cell[action].n > 0);
       }),
     );
-    iters.push({ policy: newPolicy, value: newValue, maxError });
-    if (allTouched && maxError < tolerance) {
+    iters.push({ policy: newPolicy, actionValue: newValue, maxError });
+    const policyChanged = range(env.rows).some(r =>
+      range(env.cols).some(
+        c =>
+          safeGetCellAction(newPolicy, r, c) !==
+          safeGetCellAction(lastIter.policy, r, c),
+      ),
+    );
+    if (allTouched && !policyChanged && maxError < tolerance) {
+      // Stop when policy is stable and all state-actions are visited
       break;
     }
     await Promise.resolve();
