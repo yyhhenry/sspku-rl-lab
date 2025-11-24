@@ -16,22 +16,73 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   gridActionEnum,
   gridActionIcon,
   gridActionTransform,
+  safeGetCellAction,
   useGridEnv,
   useGridPolicy,
+  useGridReward,
 } from "@/lib/grid-env";
-import { explorationAnalysisDemo } from "@/lib/monte-carlo";
+import {
+  explorationAnalysisDemo,
+  monteCarloDemo,
+  type MonteCarloIterInfo,
+} from "@/lib/monte-carlo";
 import { cn } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
-  const [epsilon, setEpsilon] = useState("0.0");
+  const [reward] = useGridReward();
+  const [epsilon, setEpsilon] = useState("0.2");
+
+  const [iters, setIters] = useState<MonteCarloIterInfo[]>([]);
+  const [activeIter, setActiveIter] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      const result = await monteCarloDemo(env, reward, {
+        epsilon: parseFloat(epsilon),
+        isAlive: () => mounted,
+      });
+      if (!mounted) return;
+      console.log(env);
+      setIters(result);
+      setActiveIter(Math.max(0, result.length - 1));
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [env, reward, epsilon]);
+
+  const policy = useMemo(
+    () => (iters.length === 0 ? undefined : iters[activeIter]?.policy),
+    [iters, activeIter],
+  );
+  const actionValue = useMemo(
+    () => (iters.length === 0 ? undefined : iters[activeIter]?.actionValue),
+    [iters, activeIter],
+  );
+
+  const cellBestValue = useMemo(() => {
+    if (!actionValue) return [];
+    return actionValue.map(row =>
+      row.map(cell =>
+        Math.max(...gridActionEnum.map(a => cell[a] ?? -Infinity)),
+      ),
+    );
+  }, [actionValue]);
 
   return (
     <div className="m-2">
@@ -51,23 +102,65 @@ function EpsilonGreedyOptimality() {
           </SelectContent>
         </Select>
       </div>
+      <div className="mb-4 flex items-center justify-center">
+        <div className="m-2">Iteration {activeIter}:</div>
+        <div className="w-sm">
+          <Slider
+            value={[activeIter]}
+            onValueChange={val => setActiveIter(val[0])}
+            min={0}
+            max={Math.max(0, iters.length - 1)}
+            step={1}
+          />
+        </div>
+      </div>
 
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
           <GridView
             className="my-2"
             env={env}
-            cell={() => {
-              const ActionIcon = gridActionIcon["idle"];
-              return <ActionIcon />;
+            cell={(r, c) => {
+              if (!policy || !actionValue) return null;
+              const ActionIcon =
+                gridActionIcon[safeGetCellAction(policy, r, c)];
+              return (
+                <span>
+                  <ActionIcon />
+                </span>
+              );
             }}
           />
 
           <GridView
             className="my-2"
             env={env}
-            cell={() => {
-              return <span className="text-xs">0.0</span>;
+            cell={(r, c) => {
+              return (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <span className="text-[10px] opacity-80">
+                      {cellBestValue[r]?.[c]?.toFixed(2) ?? ""}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-sm">
+                      <div>
+                        State ({r}, {c}) Action Values:
+                      </div>
+                      {gridActionEnum.map(action => (
+                        <div key={action} className="flex items-center gap-2">
+                          <span className="w-12 capitalize">{action}:</span>
+                          <span>
+                            {actionValue?.[r]?.[c]?.[action]?.toFixed(4) ??
+                              "N/A"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
             }}
           />
         </div>
@@ -88,14 +181,20 @@ function EpsilonExplorationAnalysis() {
   >({});
 
   useEffect(() => {
+    let mounted = true;
     explorationAnalysisDemo(
       env,
       policy,
       parseFloat(epsilon),
       episodeLength,
+      () => mounted,
     ).then(({ stateActionCount }) => {
+      if (!mounted) return;
       setStateActionCount(stateActionCount);
     });
+    return () => {
+      mounted = false;
+    };
   }, [env, epsilon, episodeLength, runKey]);
 
   const maxCount = useMemo(

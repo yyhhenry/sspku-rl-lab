@@ -12,6 +12,12 @@ import {
 } from "./grid-env";
 import { arr, mat, range } from "./tensor";
 
+export function asyncImmediate() {
+  return new Promise<void>(resolve => {
+    setTimeout(() => resolve(), 0);
+  });
+}
+
 export interface GridEpisodeStep {
   r: number;
   c: number;
@@ -49,6 +55,7 @@ export async function generateEpisode(
     c: number;
     action: GridAction;
   },
+  isAlive?: () => boolean,
 ): Promise<GridEpisode> {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
@@ -57,8 +64,11 @@ export async function generateEpisode(
     const action = epsilonGreedy(epsilon, greedyAction);
     episode.push({ r, c, action });
     ({ r, c } = getActionMove(env, r, c, action));
-    if (step % 1000 === 0) {
-      await Promise.resolve();
+    if ((step + 1) % 10000 === 0) {
+      await asyncImmediate();
+      if (isAlive !== undefined && !isAlive()) {
+        break;
+      }
     }
   }
   return episode;
@@ -90,6 +100,7 @@ export async function explorationAnalysisDemo(
   policy: GridPolicy,
   epsilon: number,
   episodeLength: number,
+  isAlive?: () => boolean,
 ) {
   const start: GridEpisodeStep = { r: 0, c: 0, action: "idle" };
   const episode = await generateEpisode(
@@ -98,6 +109,7 @@ export async function explorationAnalysisDemo(
     episodeLength,
     epsilon,
     start,
+    isAlive,
   );
   const stateActionCount = countStateAction(env, episode);
   return { episode, stateActionCount };
@@ -115,10 +127,11 @@ export async function monteCarloDemo(
   {
     epsilon = 0.2,
     episodeLength = 1000,
-    maxIters = 1000,
-    tolerance = 0.001,
+    maxIters = 100,
+    tolerance = 0.01,
     minIters = 10,
-    stableRounds = 3,
+    stableRounds = 10,
+    isAlive,
   }: {
     epsilon?: number;
     episodeLength?: number;
@@ -126,8 +139,9 @@ export async function monteCarloDemo(
     tolerance?: number;
     minIters?: number;
     stableRounds?: number;
+    isAlive?: () => boolean;
   } = {},
-) {
+): Promise<MonteCarloIterInfo[]> {
   const cellCounter = mat(
     env.rows,
     env.cols,
@@ -171,6 +185,7 @@ export async function monteCarloDemo(
       episodeLength,
       epsilon,
       randomState,
+      isAlive,
     );
     const newPolicy = {
       actions: mat(env.rows, env.cols, (r, c) =>
@@ -187,6 +202,23 @@ export async function monteCarloDemo(
       const cell = cellCounter[step.r][step.c];
       cell[step.action].n += 1;
       cell[step.action].sum += g;
+      if (step.r === 3 && step.c === 2 && step.action === "idle" && t < 1000) {
+        console.log("Updating cell (3,2) idle action:", {
+          g,
+          actionReward: getActionReward(
+            env,
+            reward,
+            step.r,
+            step.c,
+            step.action,
+          ),
+          sum: cell[step.action].sum,
+          n: cell[step.action].n,
+          avg: avg(cell[step.action]),
+          env,
+          reward,
+        });
+      }
 
       newPolicy.actions[step.r][step.c] = gridActionEnum.reduce(
         (bestAction, action) => {
@@ -213,21 +245,17 @@ export async function monteCarloDemo(
       }),
     );
     iters.push({ policy: newPolicy, actionValue: newValue, maxError });
-    const policyChanged = range(env.rows).some(r =>
-      range(env.cols).some(
-        c =>
-          safeGetCellAction(newPolicy, r, c) !==
-          safeGetCellAction(lastIter.policy, r, c),
-      ),
-    );
-    const stableNow = allTouched && !policyChanged && maxError < tolerance;
+    const stableNow = allTouched && maxError < tolerance;
     stableCount = stableNow ? stableCount + 1 : 0;
     const enoughIters = iters.length >= minIters;
     if (enoughIters && stableCount >= stableRounds) {
       // Stop when stable condition holds for consecutive rounds after minIters
       break;
     }
-    await Promise.resolve();
+    await asyncImmediate();
+    if (isAlive !== undefined && !isAlive()) {
+      break;
+    }
   }
 
   return iters;
