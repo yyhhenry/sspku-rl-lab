@@ -1,10 +1,12 @@
 import {
+  getActionMove,
   gridActionEnum,
+  safeGetCellAction,
   type GridAction,
   type GridEnv,
   type GridPolicy,
-  type GridReward,
 } from "./grid-env";
+import { range } from "./tensor";
 
 export function epsilonGreedy(
   epsilon: number,
@@ -28,11 +30,22 @@ export function epsilonGreedy(
 
 export function gridEpisode(
   env: GridEnv,
-  reward: GridReward,
   policy: GridPolicy,
   steps: number,
   epsilon: number,
-  start: [number, number, GridAction],
+  start: {
+    r: number;
+    c: number;
+    action: GridAction;
+  },
 ) {
-  throw new Error("Not implemented");
+  const episode = [start];
+  let { r, c } = getActionMove(env, start.r, start.c, start.action);
+  for (const _ of range(steps)) {
+    const greedyAction = safeGetCellAction(policy, r, c);
+    const action = epsilonGreedy(epsilon, greedyAction);
+    episode.push({ r, c, action });
+    ({ r, c } = getActionMove(env, r, c, action));
+  }
+  return episode;
 }
