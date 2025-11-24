@@ -17,7 +17,7 @@ import {
 } from "@/lib/grid-env";
 import { explorationAnalysisDemo } from "@/lib/monte-carlo";
 import { cn } from "@/lib/utils";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
@@ -71,12 +71,18 @@ function EpsilonExplorationAnalysis() {
   const [epsilon, setEpsilon] = useState("1.0");
   const [episodeLength, setEpisodeLength] = useState("100");
 
-  const { stateActionCount } = useMemo(() => {
-    return explorationAnalysisDemo(
+  const [stateActionCount, setStateActionCount] = useState<
+    Record<string, number>
+  >({});
+
+  useEffect(() => {
+    explorationAnalysisDemo(
       env,
       parseFloat(epsilon),
       parseInt(episodeLength),
-    );
+    ).then(({ stateActionCount }) => {
+      setStateActionCount(stateActionCount);
+    });
   }, [env, epsilon, episodeLength]);
 
   const maxCount = useMemo(

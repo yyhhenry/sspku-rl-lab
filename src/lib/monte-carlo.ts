@@ -36,7 +36,7 @@ export function epsilonGreedy(
   }
 }
 
-export function gridEpisode(
+export async function generateEpisode(
   env: GridEnv,
   policy: GridPolicy,
   episodeLength: number,
@@ -46,14 +46,17 @@ export function gridEpisode(
     c: number;
     action: GridAction;
   },
-): GridEpisode {
+): Promise<GridEpisode> {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
-  for (const _ of range(episodeLength)) {
+  for (const step of range(episodeLength)) {
     const greedyAction = safeGetCellAction(policy, r, c);
     const action = epsilonGreedy(epsilon, greedyAction);
     episode.push({ r, c, action });
     ({ r, c } = getActionMove(env, r, c, action));
+    if (step % 1000 === 0) {
+      await Promise.resolve();
+    }
   }
   return episode;
 }
@@ -79,14 +82,20 @@ export function countStateAction(
   return stateActionCount;
 }
 
-export function explorationAnalysisDemo(
+export async function explorationAnalysisDemo(
   env: GridEnv,
   epsilon: number,
   episodeLength: number,
 ) {
   const start: GridEpisodeStep = { r: 0, c: 0, action: "idle" };
   const policy = createDefaultGridPolicy();
-  const episode = gridEpisode(env, policy, episodeLength, epsilon, start);
+  const episode = await generateEpisode(
+    env,
+    policy,
+    episodeLength,
+    epsilon,
+    start,
+  );
   const stateActionCount = countStateAction(env, episode);
   return { episode, stateActionCount };
 }
