@@ -1,12 +1,20 @@
 import {
   getActionMove,
   gridActionEnum,
+  rcToIndex,
   safeGetCellAction,
   type GridAction,
   type GridEnv,
   type GridPolicy,
 } from "./grid-env";
-import { range } from "./tensor";
+import { arr, range } from "./tensor";
+
+export interface GridEpisodeStep {
+  r: number;
+  c: number;
+  action: GridAction;
+}
+export type GridEpisode = GridEpisodeStep[];
 
 export function epsilonGreedy(
   epsilon: number,
@@ -38,7 +46,7 @@ export function gridEpisode(
     c: number;
     action: GridAction;
   },
-) {
+): GridEpisode {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
   for (const _ of range(steps)) {
@@ -48,4 +56,21 @@ export function gridEpisode(
     ({ r, c } = getActionMove(env, r, c, action));
   }
   return episode;
+}
+
+export function countStateActionInEpisode(
+  env: GridEnv,
+  episode: GridEpisode,
+): number[] {
+  const numActions = gridActionEnum.length;
+  const actionIdx = Object.fromEntries(
+    gridActionEnum.map((action, index) => [action, index]),
+  );
+  const count = arr(env.rows * env.cols * numActions, () => 0);
+  for (const step of episode) {
+    const pos = rcToIndex(env, step.r, step.c);
+    const id = pos * numActions + actionIdx[step.action];
+    count[id] += 1;
+  }
+  return count;
 }
