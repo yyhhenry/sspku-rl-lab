@@ -117,11 +117,15 @@ export async function monteCarloDemo(
     episodeLength = 1000,
     maxIters = 1000,
     tolerance = 0.001,
+    minIters = 10,
+    stableRounds = 3,
   }: {
     epsilon?: number;
     episodeLength?: number;
     maxIters?: number;
     tolerance?: number;
+    minIters?: number;
+    stableRounds?: number;
   } = {},
 ) {
   const cellCounter = mat(
@@ -151,6 +155,8 @@ export async function monteCarloDemo(
       maxError: Infinity,
     },
   ];
+
+  let stableCount = 0;
 
   while (iters.length < maxIters) {
     const lastIter = iters[iters.length - 1];
@@ -214,8 +220,11 @@ export async function monteCarloDemo(
           safeGetCellAction(lastIter.policy, r, c),
       ),
     );
-    if (allTouched && !policyChanged && maxError < tolerance) {
-      // Stop when policy is stable and all state-actions are visited
+    const stableNow = allTouched && !policyChanged && maxError < tolerance;
+    stableCount = stableNow ? stableCount + 1 : 0;
+    const enoughIters = iters.length >= minIters;
+    if (enoughIters && stableCount >= stableRounds) {
+      // Stop when stable condition holds for consecutive rounds after minIters
       break;
     }
     await Promise.resolve();
