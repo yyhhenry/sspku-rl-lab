@@ -1,4 +1,5 @@
 import {
+  createDefaultGridPolicy,
   getActionMove,
   gridActionEnum,
   rcToIndex,
@@ -79,4 +80,10 @@ export function explorationAnalysisDemo(
   env: GridEnv,
   epsilon: number,
   episodeLength: number,
-) {}
+) {
+  const start: GridEpisodeStep = { r: 0, c: 0, action: "idle" };
+  const policy = createDefaultGridPolicy();
+  const episode = gridEpisode(env, policy, episodeLength, epsilon, start);
+  const count = countStateActionInEpisode(env, episode);
+  return { episode, count };
+}
