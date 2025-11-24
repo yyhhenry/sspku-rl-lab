@@ -142,7 +142,7 @@ export async function monteCarloDemo(
     isAlive?: () => boolean;
   } = {},
 ): Promise<MonteCarloIterInfo[]> {
-  const cellCounter = mat(
+  const counters = mat(
     env.rows,
     env.cols,
     () =>
@@ -155,7 +155,7 @@ export async function monteCarloDemo(
     n === 0 ? 0 : sum / n;
 
   const getCellValue = (r: number, c: number) => {
-    const cell = cellCounter[r][c];
+    const cell = counters[r][c];
     return Object.fromEntries(
       gridActionEnum.map(action => [action, avg(cell[action])]),
     ) as Record<GridAction, number>;
@@ -183,7 +183,7 @@ export async function monteCarloDemo(
       env,
       lastIter.policy,
       episodeLength,
-      epsilon,
+      iters.length === 1 ? 1 : epsilon,
       randomState,
       isAlive,
     );
@@ -199,26 +199,9 @@ export async function monteCarloDemo(
         g * reward.gamma +
         getActionReward(env, reward, step.r, step.c, step.action);
 
-      const cell = cellCounter[step.r][step.c];
+      const cell = counters[step.r][step.c];
       cell[step.action].n += 1;
       cell[step.action].sum += g;
-      if (step.r === 3 && step.c === 2 && step.action === "idle" && t < 1000) {
-        console.log("Updating cell (3,2) idle action:", {
-          g,
-          actionReward: getActionReward(
-            env,
-            reward,
-            step.r,
-            step.c,
-            step.action,
-          ),
-          sum: cell[step.action].sum,
-          n: cell[step.action].n,
-          avg: avg(cell[step.action]),
-          env,
-          reward,
-        });
-      }
 
       newPolicy.actions[step.r][step.c] = gridActionEnum.reduce(
         (bestAction, action) => {
@@ -240,7 +223,7 @@ export async function monteCarloDemo(
     }).reduce((a, b) => Math.max(a, b), 0);
     const allTouched = range(env.rows).every(r =>
       range(env.cols).every(c => {
-        const cell = cellCounter[r][c];
+        const cell = counters[r][c];
         return gridActionEnum.every(action => cell[action].n > 0);
       }),
     );
