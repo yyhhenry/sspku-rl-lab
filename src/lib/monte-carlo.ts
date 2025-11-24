@@ -1,12 +1,16 @@
 import {
+  createDefaultGridPolicy,
   getActionMove,
+  getActionReward,
+  getStateValue,
   gridActionEnum,
   safeGetCellAction,
   type GridAction,
   type GridEnv,
   type GridPolicy,
+  type GridReward,
 } from "./grid-env";
-import { range } from "./tensor";
+import { arr, mat, range } from "./tensor";
 
 export interface GridEpisodeStep {
   r: number;
@@ -97,4 +101,100 @@ export async function explorationAnalysisDemo(
   );
   const stateActionCount = countStateAction(env, episode);
   return { episode, stateActionCount };
+}
+
+export interface MonteCarloIterInfo {
+  policy: GridPolicy;
+  value: number[];
+  maxError: number;
+}
+
+export async function monteCarloDemo(
+  env: GridEnv,
+  reward: GridReward,
+  {
+    epsilon = 0.2,
+    episodeLength = 1000,
+    maxIters = Infinity,
+    tolerance = 1e-4,
+  }: {
+    epsilon?: number;
+    episodeLength?: number;
+    maxIters?: number;
+    tolerance?: number;
+  } = {},
+) {
+  const idlePolicy = createDefaultGridPolicy();
+
+  const iters: MonteCarloIterInfo[] = [
+    {
+      policy: idlePolicy,
+      value: getStateValue(env, reward, idlePolicy),
+      maxError: Infinity,
+    },
+  ];
+
+  const cellCounter = mat(
+    env.rows,
+    env.cols,
+    () =>
+      Object.fromEntries(
+        gridActionEnum.map(action => [action, { sum: 0, n: 0 }]),
+      ) as Record<GridAction, { sum: number; n: number }>,
+  );
+
+  const avg = ({ sum, n }: { sum: number; n: number }) =>
+    n === 0 ? -Infinity : sum / n;
+
+  while (iters.length < maxIters) {
+    const lastIter = iters[iters.length - 1];
+    const randomState = {
+      r: Math.floor(Math.random() * env.rows),
+      c: Math.floor(Math.random() * env.cols),
+      action: gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)],
+    };
+    const episode = await generateEpisode(
+      env,
+      lastIter.policy,
+      episodeLength,
+      epsilon,
+      randomState,
+    );
+    const newPolicy = {
+      actions: mat(env.rows, env.cols, (r, c) =>
+        safeGetCellAction(lastIter.policy, r, c),
+      ),
+    };
+    let g = 0;
+    for (let t = episode.length - 1; t >= 0; t--) {
+      const step = episode[t];
+      g =
+        g * reward.gamma +
+        getActionReward(env, reward, step.r, step.c, step.action);
+
+      const cell = cellCounter[step.r][step.c];
+      cell[step.action].n += 1;
+      cell[step.action].sum += g;
+
+      newPolicy.actions[step.r][step.c] = gridActionEnum.reduce(
+        (bestAction, action) => {
+          const bestAvg = avg(cell[bestAction]);
+          const actionAvg = avg(cell[action]);
+          return actionAvg > bestAvg ? action : bestAction;
+        },
+        gridActionEnum[0],
+      );
+    }
+    const newValue = getStateValue(env, reward, newPolicy);
+    const maxError = arr(env.rows * env.cols, i =>
+      Math.abs(newValue[i] - lastIter.value[i]),
+    ).reduce((a, b) => Math.max(a, b), 0);
+    iters.push({ policy: newPolicy, value: newValue, maxError });
+    if (maxError < tolerance) {
+      break;
+    }
+    await Promise.resolve();
+  }
+
+  return iters;
 }
