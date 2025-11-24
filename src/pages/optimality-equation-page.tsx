@@ -226,9 +226,7 @@ export function OptimalityEquationPage() {
               </ChartContainer>
 
               <div className="flex items-center gap-4 justify-center">
-                <label className="text-sm">
-                  <Markdown content={`Truncated-$x$`} />
-                </label>
+                <label className="text-sm">Truncated-x Iteration</label>
                 <Select
                   value={valueNumIters.toString()}
                   onValueChange={val => setValueNumIters(Number(val))}
@@ -237,11 +235,11 @@ export function OptimalityEquationPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="12">12</SelectItem>
-                    <SelectItem value="80">80</SelectItem>
+                    <SelectItem value="1">x = 1</SelectItem>
+                    <SelectItem value="2">x = 2</SelectItem>
+                    <SelectItem value="4">x = 4</SelectItem>
+                    <SelectItem value="12">x = 12</SelectItem>
+                    <SelectItem value="80">x = 80</SelectItem>
                   </SelectContent>
                 </Select>
                 <label className="text-sm">
