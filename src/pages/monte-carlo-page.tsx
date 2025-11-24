@@ -9,8 +9,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { gridActionIcon, useGridEnv } from "@/lib/grid-env";
-import { useState } from "react";
+import {
+  gridActionEnum,
+  gridActionIcon,
+  gridActionTransform,
+  useGridEnv,
+} from "@/lib/grid-env";
+import { explorationAnalysisDemo } from "@/lib/monte-carlo";
+import { cn } from "@/lib/utils";
+import { useMemo, useState } from "react";
 
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
@@ -64,6 +71,14 @@ function EpsilonExplorationAnalysis() {
   const [epsilon, setEpsilon] = useState("1.0");
   const [episodeLength, setEpisodeLength] = useState("100");
 
+  const { stateActionCount } = useMemo(() => {
+    return explorationAnalysisDemo(
+      env,
+      parseFloat(epsilon),
+      parseInt(episodeLength),
+    );
+  }, [env, epsilon, episodeLength]);
+
   return (
     <div className="m-2">
       <div className="flex items-center justify-center gap-4 flex-wrap mb-4">
@@ -86,6 +101,7 @@ function EpsilonExplorationAnalysis() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="10">10 steps</SelectItem>
             <SelectItem value="100">100 steps</SelectItem>
             <SelectItem value="1000">1,000 steps</SelectItem>
             <SelectItem value="10000">10,000 steps</SelectItem>
@@ -96,7 +112,32 @@ function EpsilonExplorationAnalysis() {
 
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-          <GridView className="my-2" env={env} />
+          <GridView
+            className="my-2"
+            env={env}
+            cell={(r, c) => {
+              return (
+                <>
+                  {gridActionEnum.map(action => {
+                    const ActionIcon = gridActionIcon[action];
+                    const count = stateActionCount({ r, c, action });
+                    return (
+                      <span
+                        className={cn(
+                          "absolute text-xs",
+                          `opacity-${Math.min(100, count * 10)}`,
+                          gridActionTransform[action],
+                        )}
+                        key={action}
+                      >
+                        <ActionIcon />
+                      </span>
+                    );
+                  })}
+                </>
+              );
+            }}
+          />
         </div>
       </div>
     </div>

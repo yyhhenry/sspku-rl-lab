@@ -62,18 +62,23 @@ export function gridEpisode(
 export function countStateActionInEpisode(
   env: GridEnv,
   episode: GridEpisode,
-): number[] {
+): (step: GridEpisodeStep) => number {
   const numActions = gridActionEnum.length;
   const actionIdx = Object.fromEntries(
     gridActionEnum.map((action, index) => [action, index]),
   );
-  const count = arr(env.rows * env.cols * numActions, () => 0);
-  for (const step of episode) {
+  const asKey = (step: GridEpisodeStep) => {
     const pos = rcToIndex(env, step.r, step.c);
     const id = pos * numActions + actionIdx[step.action];
-    count[id] += 1;
+    return id;
+  };
+  const count = arr(env.rows * env.cols * numActions, () => 0);
+  for (const step of episode) {
+    count[asKey(step)] += 1;
   }
-  return count;
+  return (step: GridEpisodeStep) => {
+    return count[asKey(step)];
+  };
 }
 
 export function explorationAnalysisDemo(
@@ -84,6 +89,6 @@ export function explorationAnalysisDemo(
   const start: GridEpisodeStep = { r: 0, c: 0, action: "idle" };
   const policy = createDefaultGridPolicy();
   const episode = gridEpisode(env, policy, episodeLength, epsilon, start);
-  const count = countStateActionInEpisode(env, episode);
-  return { episode, count };
+  const stateActionCount = countStateActionInEpisode(env, episode);
+  return { episode, stateActionCount };
 }
