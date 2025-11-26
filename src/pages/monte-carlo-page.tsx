@@ -36,7 +36,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
   const [reward] = useGridReward();
-  const [epsilon, setEpsilon] = useState("0.1");
+  const [epsilon, setEpsilon] = useState("0.0");
   const [runKey, setRunKey] = useState(0);
 
   const [iters, setIters] = useState<MonteCarloIterInfo[]>([]);
@@ -81,7 +81,7 @@ function EpsilonGreedyOptimality() {
     <div className="m-2">
       <div className="flex my-2 gap-2 items-center">
         <label className="m-2">ε:</label>
-        {["0.0", "0.1", "0.2", "0.5"].map(option => (
+        {["0.0", "0.05", "0.1", "0.2", "0.5"].map(option => (
           <Button
             key={option}
             variant={option === epsilon ? "default" : "link"}
