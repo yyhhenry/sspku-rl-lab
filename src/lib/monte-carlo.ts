@@ -127,12 +127,12 @@ export async function monteCarloDemo(
   {
     epsilon = 0.2,
     episodeLength = 100,
-    maxIters = 2000,
+    numIters = 2000,
     isAlive,
   }: {
     epsilon?: number;
     episodeLength?: number;
-    maxIters?: number;
+    numIters?: number;
     isAlive?: () => boolean;
   } = {},
 ): Promise<MonteCarloIterInfo[]> {
@@ -164,7 +164,7 @@ export async function monteCarloDemo(
     },
   ];
 
-  while (iters.length < maxIters) {
+  while (iters.length < numIters + 1) {
     const lastIter = iters[iters.length - 1];
     const randomState = {
       r: Math.floor(Math.random() * env.rows),

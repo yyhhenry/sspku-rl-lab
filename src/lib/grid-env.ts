@@ -462,7 +462,7 @@ export function optimalValueIteration(
   ];
 
   while (
-    iters.length < numIters &&
+    iters.length < numIters + 1 &&
     iters[iters.length - 1].maxDiff > tolerance
   ) {
     const prev = iters[iters.length - 1].value;
@@ -521,7 +521,7 @@ export function optimalPolicyIteration(
   ];
 
   while (
-    iters.length < numIters &&
+    iters.length < numIters + 1 &&
     iters[iters.length - 1].maxDiff > tolerance
   ) {
     const prev = iters[iters.length - 1];
