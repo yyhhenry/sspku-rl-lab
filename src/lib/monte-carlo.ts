@@ -126,19 +126,13 @@ export async function monteCarloDemo(
   reward: GridReward,
   {
     epsilon = 0.2,
-    episodeLength = 1000,
-    maxIters = 100,
-    tolerance = 0.01,
-    minIters = 10,
-    stableRounds = 10,
+    episodeLength = 100,
+    maxIters = 2000,
     isAlive,
   }: {
     epsilon?: number;
     episodeLength?: number;
     maxIters?: number;
-    tolerance?: number;
-    minIters?: number;
-    stableRounds?: number;
     isAlive?: () => boolean;
   } = {},
 ): Promise<MonteCarloIterInfo[]> {
@@ -170,8 +164,6 @@ export async function monteCarloDemo(
     },
   ];
 
-  let stableCount = 0;
-
   while (iters.length < maxIters) {
     const lastIter = iters[iters.length - 1];
     const randomState = {
@@ -183,7 +175,7 @@ export async function monteCarloDemo(
       env,
       lastIter.policy,
       episodeLength,
-      iters.length === 1 ? 1 : epsilon,
+      epsilon,
       randomState,
       isAlive,
     );
@@ -221,20 +213,7 @@ export async function monteCarloDemo(
         return Math.max(maxActError, Math.abs(newAvg - lastAvg));
       }, 0);
     }).reduce((a, b) => Math.max(a, b), 0);
-    const allTouched = range(env.rows).every(r =>
-      range(env.cols).every(c => {
-        const cell = counters[r][c];
-        return gridActionEnum.every(action => cell[action].n > 0);
-      }),
-    );
     iters.push({ policy: newPolicy, actionValue: newValue, maxError });
-    const stableNow = allTouched && maxError < tolerance;
-    stableCount = stableNow ? stableCount + 1 : 0;
-    const enoughIters = iters.length >= minIters;
-    if (enoughIters && stableCount >= stableRounds) {
-      // Stop when stable condition holds for consecutive rounds after minIters
-      break;
-    }
     if (iters.length % Math.ceil(10000 / episodeLength) === 0) {
       await asyncImmediate();
     }
