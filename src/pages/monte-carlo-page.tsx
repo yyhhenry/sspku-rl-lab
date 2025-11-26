@@ -79,7 +79,7 @@ function EpsilonGreedyOptimality() {
 
   return (
     <div className="m-2">
-      <div className="flex my-2 gap-2 items-center">
+      <div className="flex my-2 gap-2 items-center flex-wrap">
         <label className="m-2">ε:</label>
         {["0.0", "0.1", "0.2", "0.5"].map(option => (
           <Button
@@ -216,7 +216,7 @@ function EpsilonExplorationAnalysis() {
 
   return (
     <div className="m-2">
-      <div className="flex my-2 gap-2 items-center">
+      <div className="flex my-2 gap-2 items-center flex-wrap">
         <label className="m-2">Episode Length:</label>
         {[1e2, 1e3, 1e4, 1e6].map(option => (
           <Button
@@ -227,11 +227,11 @@ function EpsilonExplorationAnalysis() {
               setRunKey(prev => prev + 1);
             }}
           >
-            {option}
+            {option.toLocaleString()}
           </Button>
         ))}
       </div>
-      <div className="flex my-2 gap-2 items-center">
+      <div className="flex my-2 gap-2 items-center flex-wrap">
         <label className="m-2">ε:</label>
         {["1.0", "0.5"].map(option => (
           <Button
