@@ -36,7 +36,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
   const [reward] = useGridReward();
-  const [epsilon, setEpsilon] = useState("0.2");
+  const [epsilon, setEpsilon] = useState("0.1");
   const [runKey, setRunKey] = useState(0);
 
   const [iters, setIters] = useState<MonteCarloIterInfo[]>([]);
