@@ -8,13 +8,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   gridActionEnum,
   gridActionIcon,
@@ -129,13 +129,15 @@ function EpsilonGreedyOptimality() {
             env={env}
             cell={(r, c) => {
               return (
-                <Tooltip>
-                  <TooltipTrigger>
-                    <span className="text-[10px] opacity-80">
-                      {cellBestValue[r]?.[c]?.toFixed(2) ?? ""}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-[10px] opacity-80">
+                        {cellBestValue[r]?.[c]?.toFixed(2) ?? ""}
+                      </span>
+                    </div>
+                  </HoverCardTrigger>
+                  <HoverCardContent>
                     <div className="text-sm">
                       <div>
                         State ({r}, {c}) Action Values:
@@ -150,8 +152,8 @@ function EpsilonGreedyOptimality() {
                         </div>
                       ))}
                     </div>
-                  </TooltipContent>
-                </Tooltip>
+                  </HoverCardContent>
+                </HoverCard>
               );
             }}
           />
