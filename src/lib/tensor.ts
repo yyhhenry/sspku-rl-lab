@@ -19,6 +19,17 @@ export function arr<T = number>(n: number, fn: (i: number) => T): T[] {
   }
   return result;
 }
+/**
+ * Returns a random number in the range [start, end).
+ * If only one argument is provided, it is treated as the end, and start is 0.
+ */
+export function randomRange(start: number, end?: number): number {
+  if (end === undefined) {
+    end = start;
+    start = 0;
+  }
+  return Math.random() * (end - start) + start;
+}
 
 export function mat<T = number>(
   rows: number,

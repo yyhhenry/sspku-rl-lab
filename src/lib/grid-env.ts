@@ -176,6 +176,13 @@ export const gridActionIcon: Record<GridAction, React.ElementType> = {
   left: MoveLeft,
   right: MoveRight,
 };
+export const gridActionTransform: Record<GridAction, string> = {
+  idle: "",
+  up: "translate-y-[-100%] translate-x-[-10%]",
+  down: "translate-y-[100%] translate-x-[10%]",
+  left: "translate-x-[-100%] translate-y-[10%]",
+  right: "translate-x-[100%] translate-y-[-10%]",
+};
 
 export const GridPolicySchema = z.object({
   actions: z.array(z.array(GridActionSchema)),
