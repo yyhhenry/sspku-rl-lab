@@ -7,6 +7,6 @@ SSPKU Reinforcement Learning Lab - [Demo](https://sspku-rl-lab.pages.dev/#/) | [
 ## Quick Start
 
 ```bash
-pnpm install
-pnpm run dev
+bun install
+bun run dev
 ```
