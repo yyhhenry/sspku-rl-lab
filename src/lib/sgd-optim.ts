@@ -1,0 +1,100 @@
+import { arr } from "./tensor";
+
+export interface Point2D {
+  x: number;
+  y: number;
+}
+export function randomUniform(a: number, b: number): number {
+  return Math.random() * (b - a) + a;
+}
+export function randomChoice<T>(arr: T[]): T {
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index];
+}
+export function randomUniformPoint(
+  xMin: number,
+  xMax: number,
+  yMin: number,
+  yMax: number,
+) {
+  return { x: randomUniform(xMin, xMax), y: randomUniform(yMin, yMax) };
+}
+export function randomPoints(
+  n: number,
+  xMin: number,
+  xMax: number,
+  yMin: number,
+  yMax: number,
+) {
+  return arr(n, () => randomUniformPoint(xMin, xMax, yMin, yMax));
+}
+export function l2Dist(a: Point2D, b: Point2D) {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+}
+export function avgPoint(points: Point2D[]) {
+  return {
+    x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+    y: points.reduce((sum, p) => sum + p.y, 0) / points.length,
+  };
+}
+
+export interface SGDIterInfo {
+  w: Point2D;
+  loss: number;
+}
+
+export function sgdDemo(
+  points: Point2D[],
+  alphaFn: (k: number) => number,
+  iterations: number,
+  w: Point2D,
+) {
+  const E = avgPoint(points);
+  const lossFn = (w: Point2D) => l2Dist(w, E);
+
+  const iters: SGDIterInfo[] = [{ w, loss: lossFn(w) }];
+
+  while (iters.length < iterations + 1) {
+    const k = iters.length; // 1-based index
+    const point = randomChoice(points);
+    const alpha = alphaFn(k);
+    // w_new = w - alpha * (w - point)
+    w = {
+      x: w.x - alpha * (w.x - point.x),
+      y: w.y - alpha * (w.y - point.y),
+    };
+    const loss = lossFn(w);
+    iters.push({ w, loss });
+  }
+  return iters;
+}
+
+export function mbgdDemo(
+  points: Point2D[],
+  alphaFn: (k: number) => number,
+  iterations: number,
+  batchSize: number,
+  w: Point2D,
+) {
+  const E = avgPoint(points);
+  const lossFn = (w: Point2D) => l2Dist(w, E);
+  const iters: SGDIterInfo[] = [{ w, loss: lossFn(w) }];
+
+  while (iters.length < iterations + 1) {
+    const k = iters.length; // 1-based index
+    const batch = arr(batchSize, () => randomChoice(points));
+    const alpha = alphaFn(k);
+    // w_new = w - alpha * (w - mean(batch))
+    const meanBatch = {
+      x: batch.reduce((sum, p) => sum + p.x, 0) / batch.length,
+      y: batch.reduce((sum, p) => sum + p.y, 0) / batch.length,
+    };
+    w = {
+      x: w.x - alpha * (w.x - meanBatch.x),
+      y: w.y - alpha * (w.y - meanBatch.y),
+    };
+    const loss = lossFn(w);
+    iters.push({ w, loss });
+  }
+  return iters;
+}
