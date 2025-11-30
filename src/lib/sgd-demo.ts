@@ -50,38 +50,12 @@ export interface SGDIterInfo {
   loss: number;
 }
 
-export function sgdDemo(
+export function miniBatchSGDDemo(
   points: Point2D[],
   alphaFn: (k: number) => number,
   iterations: number,
   w: Point2D,
-) {
-  const E = avgPoint(points);
-  const lossFn = (w: Point2D) => l2Dist(w, E);
-
-  const iters: SGDIterInfo[] = [{ w, loss: lossFn(w) }];
-
-  while (iters.length < iterations + 1) {
-    const k = iters.length; // 1-based index
-    const point = randomChoice(points);
-    const alpha = alphaFn(k);
-    // w_new = w - alpha * (w - point)
-    w = {
-      x: w.x - alpha * (w.x - point.x),
-      y: w.y - alpha * (w.y - point.y),
-    };
-    const loss = lossFn(w);
-    iters.push({ w, loss });
-  }
-  return iters;
-}
-
-export function mbgdDemo(
-  points: Point2D[],
-  alphaFn: (k: number) => number,
-  iterations: number,
-  batchSize: number,
-  w: Point2D,
+  batchSize: number = 1, // default to SGD
 ) {
   const E = avgPoint(points);
   const lossFn = (w: Point2D) => l2Dist(w, E);
