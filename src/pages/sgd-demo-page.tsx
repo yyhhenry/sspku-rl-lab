@@ -32,10 +32,10 @@ import {
 const expectedValue: Point2D = { x: 0, y: 0 };
 const sampleSize = 30;
 const numSamples = 400;
-const iterations = 20;
 const initialW: Point2D = { x: 50, y: 50 };
 
 function AlphaFunctionComparison() {
+  const iterations = 50;
   const [runKey, setRunKey] = useState(0);
 
   const [samples, setSamples] = useState<Point2D[]>([]);
@@ -130,101 +130,91 @@ function AlphaFunctionComparison() {
         ))}
       </div>
 
-      <div className="space-y-6">
-        <div className="w-full h-[500px]">
-          <div className="text-sm font-medium mb-2 text-center">
-            Sample Distribution & SGD Trajectory
-          </div>
-          <ChartContainer config={{}}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={[-sampleSize, sampleSize]}
-                label={{ value: "X", position: "insideBottom", offset: -10 }}
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={[-sampleSize, sampleSize]}
-                label={{ value: "Y", angle: -90, position: "insideLeft" }}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                cursor={{ strokeDasharray: "3 3" }}
-              />
+      <div>
+        <ChartContainer config={{}}>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              type="number"
+              dataKey="x"
+              domain={[-sampleSize, sampleSize]}
+              label={{ value: "X", position: "insideBottom", offset: -10 }}
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              domain={[-sampleSize, sampleSize]}
+              label={{ value: "Y", angle: -90, position: "insideLeft" }}
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent />}
+              cursor={{ strokeDasharray: "3 3" }}
+            />
+            <Scatter
+              name="Samples"
+              data={samples}
+              fill="rgba(128, 128, 128, 0.3)"
+              shape="circle"
+            />
+            <Scatter
+              name="Expected E[X]"
+              data={[expectedValue]}
+              fill="red"
+              shape="cross"
+              legendType="cross"
+            />
+            {trajectoryData.map(({ name, points, color }) => (
               <Scatter
-                name="Samples"
-                data={samples}
-                fill="rgba(128, 128, 128, 0.3)"
+                key={name}
+                name={name}
+                data={points}
+                fill={color}
                 shape="circle"
+                line
+                lineType="joint"
               />
-              <Scatter
-                name="Expected E[X]"
-                data={[expectedValue]}
-                fill="red"
-                shape="cross"
-                legendType="cross"
+            ))}
+          </ScatterChart>
+        </ChartContainer>
+        <ChartContainer config={chartConfig}>
+          <LineChart data={errorData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="iteration"
+              label={{
+                value: "Iteration",
+                position: "insideBottom",
+                offset: -10,
+              }}
+            />
+            <YAxis
+              label={{
+                value: "Error ||w - E[X]||",
+                angle: -90,
+                position: "insideLeft",
+              }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {results.map(({ name, color }) => (
+              <Line
+                key={name}
+                type="monotone"
+                dataKey={name}
+                stroke={color}
+                strokeWidth={2}
+                dot={false}
               />
-              {trajectoryData.map(({ name, points, color }) => (
-                <Scatter
-                  key={name}
-                  name={name}
-                  data={points}
-                  fill={color}
-                  shape="circle"
-                  line
-                  lineType="joint"
-                />
-              ))}
-            </ScatterChart>
-          </ChartContainer>
-        </div>
-
-        <div className="w-full h-[400px]">
-          <div className="text-sm font-medium mb-2 text-center">
-            Estimation Error vs Iterations
-          </div>
-          <ChartContainer config={chartConfig} className="h-full">
-            <LineChart data={errorData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="iteration"
-                label={{
-                  value: "Iteration",
-                  position: "insideBottom",
-                  offset: -10,
-                }}
-              />
-              <YAxis
-                label={{
-                  value: "Error ||w - E[X]||",
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {results.map(({ name, color }) => (
-                <Line
-                  key={name}
-                  type="monotone"
-                  dataKey={name}
-                  stroke={color}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-        </div>
+            ))}
+          </LineChart>
+        </ChartContainer>
       </div>
     </div>
   );
 }
 
 function BatchSizeComparison() {
+  const iterations = 20;
   const [sampleMode, setSampleMode] = useState<"square" | "circle">("square");
   const [runKey, setRunKey] = useState(0);
   const [samples, setSamples] = useState<Point2D[]>([]);
@@ -304,111 +294,101 @@ function BatchSizeComparison() {
 
   return (
     <div className="m-2">
-      <div className="space-y-6">
-        <div className="w-full h-[500px]">
-          <div className="text-sm font-medium mb-2 text-center">
-            Sample Distribution & MBGD Trajectory
-          </div>
-          <div className="flex my-2 gap-2 items-center flex-wrap">
-            <label className="m-2">Sample Mode:</label>
-            {["square", "circle"].map(option => (
-              <Button
-                key={option}
-                variant={option === sampleMode ? "default" : "link"}
-                onClick={() => {
-                  if (option !== "square" && option !== "circle") return;
-                  setSampleMode(option);
-                  setRunKey(prev => prev + 1);
-                }}
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-          <ChartContainer config={{}}>
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                type="number"
-                dataKey="x"
-                domain={[-sampleSize, sampleSize]}
-                label={{ value: "X", position: "insideBottom", offset: -10 }}
-              />
-              <YAxis
-                type="number"
-                dataKey="y"
-                domain={[-sampleSize, sampleSize]}
-                label={{ value: "Y", angle: -90, position: "insideLeft" }}
-              />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                cursor={{ strokeDasharray: "3 3" }}
-              />
+      <div className="flex my-2 gap-2 items-center flex-wrap">
+        <label className="m-2">Sample Mode:</label>
+        {["square", "circle"].map(option => (
+          <Button
+            key={option}
+            variant={option === sampleMode ? "default" : "link"}
+            onClick={() => {
+              if (option !== "square" && option !== "circle") return;
+              setSampleMode(option);
+              setRunKey(prev => prev + 1);
+            }}
+          >
+            {option}
+          </Button>
+        ))}
+      </div>
+      <div>
+        <ChartContainer config={{}}>
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              type="number"
+              dataKey="x"
+              domain={[-sampleSize, sampleSize]}
+              label={{ value: "X", position: "insideBottom", offset: -10 }}
+            />
+            <YAxis
+              type="number"
+              dataKey="y"
+              domain={[-sampleSize, sampleSize]}
+              label={{ value: "Y", angle: -90, position: "insideLeft" }}
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent />}
+              cursor={{ strokeDasharray: "3 3" }}
+            />
+            <Scatter
+              name="Samples"
+              data={samples}
+              fill="rgba(128, 128, 128, 0.3)"
+              shape="circle"
+            />
+            <Scatter
+              name="Expected E[X]"
+              data={[expectedValue]}
+              fill="red"
+              shape="cross"
+              legendType="cross"
+            />
+            {trajectoryData.map(({ name, points, color }) => (
               <Scatter
-                name="Samples"
-                data={samples}
-                fill="rgba(128, 128, 128, 0.3)"
+                key={name}
+                name={name}
+                data={points}
+                fill={color}
                 shape="circle"
+                line
+                lineType="joint"
               />
-              <Scatter
-                name="Expected E[X]"
-                data={[expectedValue]}
-                fill="red"
-                shape="cross"
-                legendType="cross"
-              />
-              {trajectoryData.map(({ name, points, color }) => (
-                <Scatter
-                  key={name}
-                  name={name}
-                  data={points}
-                  fill={color}
-                  shape="circle"
-                  line
-                  lineType="joint"
-                />
-              ))}
-            </ScatterChart>
-          </ChartContainer>
-        </div>
+            ))}
+          </ScatterChart>
+        </ChartContainer>
 
-        <div className="w-full h-[400px]">
-          <div className="text-sm font-medium mb-2 text-center">
-            Estimation Error vs Iterations
-          </div>
-          <ChartContainer config={chartConfig} className="h-full">
-            <LineChart data={errorData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="iteration"
-                label={{
-                  value: "Iteration",
-                  position: "insideBottom",
-                  offset: -10,
-                }}
+        <ChartContainer config={chartConfig} className="h-full">
+          <LineChart data={errorData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="iteration"
+              label={{
+                value: "Iteration",
+                position: "insideBottom",
+                offset: -10,
+              }}
+            />
+            <YAxis
+              label={{
+                value: "Error ||w - E[X]||",
+                angle: -90,
+                position: "insideLeft",
+              }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            {results.map(({ name, color }) => (
+              <Line
+                key={name}
+                type="monotone"
+                dataKey={name}
+                stroke={color}
+                strokeWidth={2}
+                dot={false}
               />
-              <YAxis
-                label={{
-                  value: "Error ||w - E[X]||",
-                  angle: -90,
-                  position: "insideLeft",
-                }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              {results.map(({ name, color }) => (
-                <Line
-                  key={name}
-                  type="monotone"
-                  dataKey={name}
-                  stroke={color}
-                  strokeWidth={2}
-                  dot={false}
-                />
-              ))}
-            </LineChart>
-          </ChartContainer>
-        </div>
+            ))}
+          </LineChart>
+        </ChartContainer>
       </div>
     </div>
   );
@@ -417,7 +397,7 @@ function BatchSizeComparison() {
 export function SGDDemoPage() {
   return (
     <div className="flex justify-center">
-      <Card className="w-full max-w-5xl">
+      <Card className="w-full max-w-3xl">
         <CardContent>
           <Tabs defaultValue="alpha">
             <div className="overflow-x-auto">
