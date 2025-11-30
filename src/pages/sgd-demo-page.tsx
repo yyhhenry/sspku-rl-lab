@@ -1,3 +1,4 @@
+import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -53,14 +54,18 @@ function AlphaFunctionComparison() {
     setSamples(newSamples);
 
     const alphaConfigs = [
-      { name: "α = 1/k", fn: standardAlphaFn(), color: "var(--chart-1)" },
       {
-        name: "α = 0.05",
+        name: "$\\alpha_k = \\frac{1}{k}$",
+        fn: standardAlphaFn(),
+        color: "var(--chart-1)",
+      },
+      {
+        name: "$\\alpha_k = 0.05$",
         fn: constantAlphaFn(0.05),
         color: "var(--chart-2)",
       },
       {
-        name: "α = (1+cos(k))/2/k",
+        name: "$\\alpha_k = \\frac{1+\\cos k}{2 k}$",
         fn: convergentSequenceAlphaFn(),
         color: "var(--chart-3)",
       },
@@ -104,9 +109,10 @@ function AlphaFunctionComparison() {
   }, [results]);
 
   const chartConfig = useMemo(() => {
-    const config: Record<string, { label: string; color: string }> = {};
+    const config: Record<string, { label: React.ReactNode; color: string }> =
+      {};
     results.forEach(({ name, color }) => {
-      config[name] = { label: name, color };
+      config[name] = { label: <Markdown content={name} />, color };
     });
     return config;
   }, [results]);
