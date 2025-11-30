@@ -11,22 +11,29 @@ export function randomChoice<T>(arr: T[]): T {
   const index = Math.floor(Math.random() * arr.length);
   return arr[index];
 }
-export function randomUniformPoint(
-  xMin: number,
-  xMax: number,
-  yMin: number,
-  yMax: number,
-) {
-  return { x: randomUniform(xMin, xMax), y: randomUniform(yMin, yMax) };
+export function randomPointInSquare(size: number): Point2D {
+  const halfSize = size / 2;
+  return {
+    x: randomUniform(-halfSize, halfSize),
+    y: randomUniform(-halfSize, halfSize),
+  };
+}
+export function randomPointInCircle(radius: number): Point2D {
+  const r = radius * Math.sqrt(Math.random());
+  const theta = randomUniform(0, 2 * Math.PI);
+  return {
+    x: r * Math.cos(theta),
+    y: r * Math.sin(theta),
+  };
 }
 export function randomPoints(
   n: number,
-  xMin: number,
-  xMax: number,
-  yMin: number,
-  yMax: number,
-) {
-  return arr(n, () => randomUniformPoint(xMin, xMax, yMin, yMax));
+  size: number,
+  mode: "square" | "circle" = "square",
+): Point2D[] {
+  return arr(n, () =>
+    mode === "square" ? randomPointInSquare(size) : randomPointInCircle(size),
+  );
 }
 export function l2Dist(a: Point2D, b: Point2D) {
   return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
