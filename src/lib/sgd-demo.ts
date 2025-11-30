@@ -83,12 +83,12 @@ export function miniBatchSGDDemo(
 export function standardAlphaFn() {
   return (k: number) => 1 / k;
 }
-export function constantAlphaFn(alpha: number = 5e-3) {
+export function constantAlphaFn(alpha: number = 5e-2) {
   return () => alpha;
 }
 export function convergentSequenceAlphaFn() {
   // For SGD convergence proof only
-  // Using convergent sequence: c_k = 1 + cos(k)
+  // Using convergent sequence: c_k = (1 + cos(k)) / 2
   // alpha_k = c_k / k
-  return (k: number) => (1 + Math.cos(k)) / k;
+  return (k: number) => (1 + Math.cos(k)) / 2 / k;
 }
