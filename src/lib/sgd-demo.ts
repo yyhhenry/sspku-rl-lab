@@ -79,3 +79,16 @@ export function miniBatchSGDDemo(
   }
   return iters;
 }
+
+export function standardAlphaFn() {
+  return (k: number) => 1 / k;
+}
+export function constantAlphaFn(alpha: number = 5e-3) {
+  return () => alpha;
+}
+export function convergentSequenceAlphaFn() {
+  // For SGD convergence proof only
+  // Using convergent sequence: c_k = 1 + cos(k)
+  // alpha_k = c_k / k
+  return (k: number) => (1 + Math.cos(k)) / k;
+}
