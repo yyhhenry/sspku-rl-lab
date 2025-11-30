@@ -200,7 +200,7 @@ function AlphaFunctionComparison() {
                 position: "insideLeft",
               }}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip content={<ChartTooltipContent hideLabel={true} />} />
             <ChartLegend content={<ChartLegendContent />} />
             {results.map(({ name, color }) => (
               <Line
@@ -381,7 +381,7 @@ function BatchSizeComparison() {
                 position: "insideLeft",
               }}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
+            <ChartTooltip content={<ChartTooltipContent hideLabel={true} />} />
             <ChartLegend content={<ChartLegendContent />} />
             {results.map(({ name, color }) => (
               <Line
