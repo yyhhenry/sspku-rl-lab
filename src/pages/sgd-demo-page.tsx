@@ -131,7 +131,7 @@ function AlphaFunctionComparison() {
       </div>
 
       <div>
-        <ChartContainer config={{}}>
+        <ChartContainer className="aspect-square" config={{}}>
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
@@ -311,7 +311,7 @@ function BatchSizeComparison() {
         ))}
       </div>
       <div>
-        <ChartContainer config={{}}>
+        <ChartContainer className="aspect-square" config={{}}>
           <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
