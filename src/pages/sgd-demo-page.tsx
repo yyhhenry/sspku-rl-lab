@@ -6,6 +6,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { TrendingDown } from "lucide-react";
+
 export function SGDDemoPage() {
   return (
     <Empty>
