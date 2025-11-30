@@ -7,7 +7,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   constantAlphaFn,
@@ -30,13 +29,13 @@ import {
   YAxis,
 } from "recharts";
 
-const EXPECTED_VALUE: Point2D = { x: 0, y: 0 };
-const SQUARE_SIZE = 30;
-const NUM_SAMPLES = 400;
-const INITIAL_W: Point2D = { x: 50, y: 50 };
+const expectedValue: Point2D = { x: 0, y: 0 };
+const sampleSize = 30;
+const numSamples = 400;
+const iterations = 20;
+const initialW: Point2D = { x: 50, y: 50 };
 
 function AlphaFunctionComparison() {
-  const iterations = 100;
   const [runKey, setRunKey] = useState(0);
 
   const [samples, setSamples] = useState<Point2D[]>([]);
@@ -50,7 +49,7 @@ function AlphaFunctionComparison() {
   >([]);
 
   useEffect(() => {
-    const newSamples = randomPoints(NUM_SAMPLES, SQUARE_SIZE, sampleMode);
+    const newSamples = randomPoints(numSamples, sampleSize, sampleMode);
     setSamples(newSamples);
 
     const alphaConfigs = [
@@ -69,30 +68,24 @@ function AlphaFunctionComparison() {
 
     const newResults = alphaConfigs.map(({ name, fn, color }) => ({
       name,
-      iters: miniBatchSGDDemo(newSamples, fn, iterations, INITIAL_W, 1),
+      iters: miniBatchSGDDemo(newSamples, fn, iterations, initialW, 1),
       color,
     }));
 
     setResults(newResults);
-  }, [iterations, sampleMode, runKey]);
-
-  const [activeIter, setActiveIter] = useState(0);
-
-  useEffect(() => {
-    setActiveIter(Math.min(activeIter, iterations));
-  }, [iterations, activeIter]);
+  }, [sampleMode, runKey]);
 
   const trajectoryData = useMemo(() => {
     return results.map(({ name, iters, color }) => ({
       name,
       color,
-      points: iters.slice(0, activeIter + 1).map((iter, i) => ({
+      points: iters.map((iter, i) => ({
         x: iter.w.x,
         y: iter.w.y,
         iteration: i,
       })),
     }));
-  }, [results, activeIter]);
+  }, [results]);
 
   const errorData = useMemo(() => {
     if (results.length === 0) return [];
@@ -103,7 +96,7 @@ function AlphaFunctionComparison() {
       };
       results.forEach(({ name, iters }) => {
         if (i < iters.length) {
-          point[name] = l2Dist(iters[i].w, EXPECTED_VALUE);
+          point[name] = l2Dist(iters[i].w, expectedValue);
         }
       });
       return point;
@@ -137,19 +130,6 @@ function AlphaFunctionComparison() {
         ))}
       </div>
 
-      <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {activeIter}:</div>
-        <div className="w-sm">
-          <Slider
-            value={[activeIter]}
-            onValueChange={val => setActiveIter(val[0])}
-            min={0}
-            max={iterations}
-            step={1}
-          />
-        </div>
-      </div>
-
       <div className="space-y-6">
         <div className="w-full h-[500px]">
           <div className="text-sm font-medium mb-2 text-center">
@@ -161,13 +141,13 @@ function AlphaFunctionComparison() {
               <XAxis
                 type="number"
                 dataKey="x"
-                domain={[-SQUARE_SIZE, SQUARE_SIZE]}
+                domain={[-sampleSize, sampleSize]}
                 label={{ value: "X", position: "insideBottom", offset: -10 }}
               />
               <YAxis
                 type="number"
                 dataKey="y"
-                domain={[-SQUARE_SIZE, SQUARE_SIZE]}
+                domain={[-sampleSize, sampleSize]}
                 label={{ value: "Y", angle: -90, position: "insideLeft" }}
               />
               <ChartTooltip
@@ -182,7 +162,7 @@ function AlphaFunctionComparison() {
               />
               <Scatter
                 name="Expected E[X]"
-                data={[EXPECTED_VALUE]}
+                data={[expectedValue]}
                 fill="red"
                 shape="cross"
                 legendType="cross"
@@ -245,9 +225,8 @@ function AlphaFunctionComparison() {
 }
 
 function BatchSizeComparison() {
-  const [iterations, setIterations] = useState(100);
+  const [sampleMode, setSampleMode] = useState<"square" | "circle">("square");
   const [runKey, setRunKey] = useState(0);
-
   const [samples, setSamples] = useState<Point2D[]>([]);
   const [results, setResults] = useState<
     {
@@ -259,7 +238,7 @@ function BatchSizeComparison() {
   >([]);
 
   useEffect(() => {
-    const newSamples = randomPoints(NUM_SAMPLES, SQUARE_SIZE, "square");
+    const newSamples = randomPoints(numSamples, sampleSize, sampleMode);
     setSamples(newSamples);
 
     const batchConfigs = [
@@ -278,32 +257,26 @@ function BatchSizeComparison() {
         newSamples,
         alphaFn,
         iterations,
-        INITIAL_W,
+        initialW,
         batchSize,
       ),
       color,
     }));
 
     setResults(newResults);
-  }, [iterations, runKey]);
-
-  const [activeIter, setActiveIter] = useState(0);
-
-  useEffect(() => {
-    setActiveIter(Math.min(activeIter, iterations));
-  }, [iterations, activeIter]);
+  }, [sampleMode, runKey]);
 
   const trajectoryData = useMemo(() => {
     return results.map(({ name, iters, color }) => ({
       name,
       color,
-      points: iters.slice(0, activeIter + 1).map((iter, i) => ({
+      points: iters.map((iter, i) => ({
         x: iter.w.x,
         y: iter.w.y,
         iteration: i,
       })),
     }));
-  }, [results, activeIter]);
+  }, [results]);
 
   const errorData = useMemo(() => {
     if (results.length === 0) return [];
@@ -314,7 +287,7 @@ function BatchSizeComparison() {
       };
       results.forEach(({ name, iters }) => {
         if (i < iters.length) {
-          point[name] = l2Dist(iters[i].w, EXPECTED_VALUE);
+          point[name] = l2Dist(iters[i].w, expectedValue);
         }
       });
       return point;
@@ -331,54 +304,40 @@ function BatchSizeComparison() {
 
   return (
     <div className="m-2">
-      <div className="flex my-2 gap-2 items-center flex-wrap">
-        <label className="m-2">Iterations:</label>
-        {[100, 200, 500, 1000].map(option => (
-          <Button
-            key={option}
-            variant={option === iterations ? "default" : "link"}
-            onClick={() => {
-              setIterations(option);
-              setRunKey(prev => prev + 1);
-            }}
-          >
-            {option}
-          </Button>
-        ))}
-      </div>
-
-      <div className="mb-4 flex items-center justify-center">
-        <div className="m-2">Iteration {activeIter}:</div>
-        <div className="w-sm">
-          <Slider
-            value={[activeIter]}
-            onValueChange={val => setActiveIter(val[0])}
-            min={0}
-            max={iterations}
-            step={1}
-          />
-        </div>
-      </div>
-
       <div className="space-y-6">
         <div className="w-full h-[500px]">
           <div className="text-sm font-medium mb-2 text-center">
             Sample Distribution & MBGD Trajectory
           </div>
-          {/* TODO: Enhanced interactive scatter plot */}
+          <div className="flex my-2 gap-2 items-center flex-wrap">
+            <label className="m-2">Sample Mode:</label>
+            {["square", "circle"].map(option => (
+              <Button
+                key={option}
+                variant={option === sampleMode ? "default" : "link"}
+                onClick={() => {
+                  if (option !== "square" && option !== "circle") return;
+                  setSampleMode(option);
+                  setRunKey(prev => prev + 1);
+                }}
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
           <ChartContainer config={{}}>
             <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 type="number"
                 dataKey="x"
-                domain={[-SQUARE_SIZE, SQUARE_SIZE]}
+                domain={[-sampleSize, sampleSize]}
                 label={{ value: "X", position: "insideBottom", offset: -10 }}
               />
               <YAxis
                 type="number"
                 dataKey="y"
-                domain={[-SQUARE_SIZE, SQUARE_SIZE]}
+                domain={[-sampleSize, sampleSize]}
                 label={{ value: "Y", angle: -90, position: "insideLeft" }}
               />
               <ChartTooltip
@@ -393,7 +352,7 @@ function BatchSizeComparison() {
               />
               <Scatter
                 name="Expected E[X]"
-                data={[EXPECTED_VALUE]}
+                data={[expectedValue]}
                 fill="red"
                 shape="cross"
                 legendType="cross"

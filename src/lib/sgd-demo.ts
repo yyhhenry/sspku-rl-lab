@@ -32,7 +32,9 @@ export function randomPoints(
   mode: "square" | "circle" = "square",
 ): Point2D[] {
   return arr(n, () =>
-    mode === "square" ? randomPointInSquare(size) : randomPointInCircle(size),
+    mode === "square"
+      ? randomPointInSquare(size)
+      : randomPointInCircle(size / 2),
   );
 }
 export function l2Dist(a: Point2D, b: Point2D) {
