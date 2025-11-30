@@ -3,7 +3,15 @@ import { EnvironmentPage } from "@/pages/environment-page";
 import { MonteCarloPage } from "@/pages/monte-carlo-page";
 import { OptimalityEquationPage } from "@/pages/optimality-equation-page";
 import { RewardsPage } from "@/pages/rewards-page";
-import { Calculator, Dices, Grid, Lollipop, SquarePi } from "lucide-react";
+import { SGDDemoPage } from "@/pages/sgd-demo-page";
+import {
+  Calculator,
+  Dices,
+  Grid,
+  Lollipop,
+  SquarePi,
+  TrendingDown,
+} from "lucide-react";
 
 export interface RouteItem {
   path: string;
@@ -41,5 +49,11 @@ export const routes: RouteItem[] = [
     name: "Monte Carlo",
     icon: Dices,
     page: MonteCarloPage,
+  },
+  {
+    path: "/sgd-demo",
+    name: "SGD Demo",
+    icon: TrendingDown,
+    page: SGDDemoPage,
   },
 ] as const;
