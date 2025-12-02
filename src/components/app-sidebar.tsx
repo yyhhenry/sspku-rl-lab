@@ -11,15 +11,16 @@ import {
 } from "@/components/ui/sidebar";
 import { routes } from "@/lib/routes";
 import { Grid2x2Check, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const location = useLocation();
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={location.pathname === "/"}>
               <Link to="/" className="py-5">
                 <span className="text-lg">
                   <Grid2x2Check />
@@ -36,7 +37,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenu>
               {routes.map(route => (
                 <SidebarMenuItem key={route.path}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === route.path}
+                  >
                     <Link to={route.path}>
                       {route.icon && <route.icon />}
                       <span>{route.name}</span>
@@ -51,7 +55,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton
+              asChild
+              isActive={location.pathname === "/settings"}
+            >
               <Link to="/settings">
                 <Settings />
                 Settings
