@@ -48,7 +48,7 @@ export function App() {
     <HashRouter>
       <Toaster />
       <SidebarProvider>
-        <AppSidebar variant="inset" />
+        <AppSidebar variant="floating" />
         <SidebarInset>
           <Routes>
             <Route path="/" element={withHeader("Home", <HomePage />)} />
