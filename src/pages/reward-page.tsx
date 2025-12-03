@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-export function RewardsPage() {
+export function RewardPage() {
   const [gridReward, setGridReward] = useGridReward();
 
   return (
@@ -66,7 +66,7 @@ export function RewardsPage() {
                   <div
                     className={cn(
                       "inline-block w-4 h-4 ml-2 rounded-full border-2 border-muted-foreground",
-                      gridCellColor[cell]
+                      gridCellColor[cell],
                     )}
                   />
                   <span>{cell}</span>

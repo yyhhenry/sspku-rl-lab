@@ -93,7 +93,7 @@ export const useGridEnv = createZodStore(
   createDefaultGridEnv,
 );
 
-// Grid Rewards
+// Grid Reward
 export const GridRewardSchema = z.object({
   gamma: z.number().min(0.01).max(0.99),
   border: z.number(),

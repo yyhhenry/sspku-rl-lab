@@ -2,7 +2,7 @@ import { EnvironmentPage } from "@/pages/environment-page";
 import { MonteCarloPage } from "@/pages/monte-carlo-page";
 import { OptimalityEquationPage } from "@/pages/optimality-equation-page";
 import { PolicyPage } from "@/pages/policy-page";
-import { RewardsPage } from "@/pages/rewards-page";
+import { RewardPage } from "@/pages/reward-page";
 import { SGDDemoPage } from "@/pages/sgd-demo-page";
 import {
   Dices,
@@ -27,10 +27,10 @@ export const routes: RouteItem[] = [
     page: EnvironmentPage,
   },
   {
-    path: "/rewards",
-    name: "Rewards",
+    path: "/reward",
+    name: "Reward",
     icon: Lollipop,
-    page: RewardsPage,
+    page: RewardPage,
   },
   {
     path: "/policy",
