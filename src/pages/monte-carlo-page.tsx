@@ -50,7 +50,6 @@ function EpsilonGreedyOptimality() {
         isAlive: () => mounted,
       });
       if (!mounted) return;
-      console.log(env);
       setIters(result);
       setActiveIter(Math.max(0, result.length - 1));
     })();
