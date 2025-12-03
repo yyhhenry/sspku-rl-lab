@@ -249,7 +249,7 @@ function EpsilonExplorationAnalysis() {
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
           <div className="text-xs text-muted-foreground">
-            Use policy in "Bellman Equation" Page
+            Use policy in "Policy" Page
           </div>
           <GridView
             className="m-4"
