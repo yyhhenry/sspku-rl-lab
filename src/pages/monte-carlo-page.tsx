@@ -30,7 +30,9 @@ import {
   type MonteCarloIterInfo,
 } from "@/lib/monte-carlo";
 import { cn } from "@/lib/utils";
+import { ArrowUpRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 function EpsilonGreedyOptimality() {
@@ -248,8 +250,13 @@ function EpsilonExplorationAnalysis() {
 
       <div className="overflow-x-auto">
         <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-          <div className="text-xs text-muted-foreground">
-            Use policy in "Policy" Page
+          <div className="text-sm">
+            Use policy from{" "}
+            <Button variant="link">
+              <Link to="/policy" className="flex items-center gap-1">
+                Policy Page <ArrowUpRight />
+              </Link>
+            </Button>
           </div>
           <GridView
             className="m-4"
