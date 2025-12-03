@@ -2,7 +2,11 @@ import { GridView } from "@/components/grid-view";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -29,16 +33,17 @@ import {
   mat,
   matrixAdd,
 } from "@/lib/tensor";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-interface BellmanEquationProps {
+interface PolicyPageProps {
   env: GridEnv;
   reward: GridReward;
   policy: GridPolicy;
 }
 
-function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
+function PolicyBasicInfo({ env, reward, policy }: PolicyPageProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
     [env, reward, policy],
@@ -61,7 +66,7 @@ function PolicyCommonData({ env, reward, policy }: BellmanEquationProps) {
   );
 }
 
-function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
+function ClosedFormSolution({ env, reward, policy }: PolicyPageProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
     [env, reward, policy],
@@ -128,7 +133,7 @@ function ClosedFormSolution({ env, reward, policy }: BellmanEquationProps) {
   );
 }
 
-function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
+function IterativeSolution({ env, reward, policy }: PolicyPageProps) {
   const rewardTensor = useMemo(
     () => getRewardTensor(env, reward, policy),
     [env, reward, policy],
@@ -204,7 +209,7 @@ function IterativeSolution({ env, reward, policy }: BellmanEquationProps) {
   );
 }
 
-export function BellmanEquationPage() {
+export function PolicyPage() {
   const [gridEnv] = useGridEnv();
   const [gridReward] = useGridReward();
   const [gridPolicy, setGridPolicy] = useGridPolicy();
@@ -270,44 +275,53 @@ export function BellmanEquationPage() {
               </span>
             </div>
           </div>
-          <Separator className="my-4" />
 
-          <div className="w-full">
-            <Tabs defaultValue="common-data">
-              <div className="overflow-x-auto">
-                <TabsList className="w-fit min-w-full">
-                  <TabsTrigger value="common-data">Common Data</TabsTrigger>
-                  <TabsTrigger value="closed-form">
-                    Closed-form Solution
-                  </TabsTrigger>
-                  <TabsTrigger value="iterative">
-                    Iterative Solution
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-              <TabsContent value="common-data">
-                <PolicyCommonData
-                  env={gridEnv}
-                  reward={gridReward}
-                  policy={gridPolicy}
-                />
-              </TabsContent>
-              <TabsContent value="closed-form">
-                <ClosedFormSolution
-                  env={gridEnv}
-                  reward={gridReward}
-                  policy={gridPolicy}
-                />
-              </TabsContent>
-              <TabsContent value="iterative">
-                <IterativeSolution
-                  env={gridEnv}
-                  reward={gridReward}
-                  policy={gridPolicy}
-                />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <Collapsible className="group/collapsible">
+            <div className="flex justify-center my-2">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost">
+                  <span>Policy Evaluation (Bellman Equation)</span>
+                  <ChevronDown className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:-rotate-180" />
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent>
+              <Tabs defaultValue="basic-info">
+                <div className="overflow-x-auto">
+                  <TabsList className="w-fit min-w-full">
+                    <TabsTrigger value="basic-info">Basic Info</TabsTrigger>
+                    <TabsTrigger value="closed-form">
+                      Closed-form Solution
+                    </TabsTrigger>
+                    <TabsTrigger value="iterative">
+                      Iterative Solution
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                <TabsContent value="basic-info">
+                  <PolicyBasicInfo
+                    env={gridEnv}
+                    reward={gridReward}
+                    policy={gridPolicy}
+                  />
+                </TabsContent>
+                <TabsContent value="closed-form">
+                  <ClosedFormSolution
+                    env={gridEnv}
+                    reward={gridReward}
+                    policy={gridPolicy}
+                  />
+                </TabsContent>
+                <TabsContent value="iterative">
+                  <IterativeSolution
+                    env={gridEnv}
+                    reward={gridReward}
+                    policy={gridPolicy}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CollapsibleContent>
+          </Collapsible>
         </CardContent>
       </Card>
     </div>

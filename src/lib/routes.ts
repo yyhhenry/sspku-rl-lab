@@ -1,16 +1,16 @@
-import { BellmanEquationPage } from "@/pages/bellman-equation-page";
 import { EnvironmentPage } from "@/pages/environment-page";
 import { MonteCarloPage } from "@/pages/monte-carlo-page";
 import { OptimalityEquationPage } from "@/pages/optimality-equation-page";
+import { PolicyPage } from "@/pages/policy-page";
 import { RewardsPage } from "@/pages/rewards-page";
 import { SGDDemoPage } from "@/pages/sgd-demo-page";
 import {
-  Calculator,
   Dices,
   Grid,
   Lollipop,
   SquarePi,
   TrendingDown,
+  Workflow,
 } from "lucide-react";
 
 export interface RouteItem {
@@ -33,10 +33,10 @@ export const routes: RouteItem[] = [
     page: RewardsPage,
   },
   {
-    path: "/bellman-equation",
-    name: "Bellman Equation",
-    icon: Calculator,
-    page: BellmanEquationPage,
+    path: "/policy",
+    name: "Policy",
+    icon: Workflow,
+    page: PolicyPage,
   },
   {
     path: "/optimality-equation",
