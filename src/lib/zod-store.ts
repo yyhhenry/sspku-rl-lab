@@ -10,13 +10,13 @@ export function createZodStore<T>(
   key: string,
   schema: ZodType<T>,
   createDefault: () => T,
-) {
+): () => readonly [T, (newValue: T) => void] {
   const baseAtom = atomWithStorage<{
     value: T;
   }>(storagePrefix + key, {
     value: createDefault(),
   });
-  const useZodStore = () => {
+  return () => {
     const [stored, setStored] = useAtom(baseAtom);
     const value = useMemo((): T => {
       const parsed = schema.safeParse(stored.value);
@@ -46,5 +46,4 @@ export function createZodStore<T>(
     );
     return [value, setValue] as const;
   };
-  return useZodStore;
 }
