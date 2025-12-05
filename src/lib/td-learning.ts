@@ -195,14 +195,22 @@ export interface QLearningIterInfo {
   step: number;
   stateValue: number[][];
   policy: GridPolicy;
+  error?: number;
 }
 
 export function demoQLearning(
   env: GridEnv,
   reward: GridReward,
   episodes: GridEpisode[],
-  alpha: number = 0.1,
-  saveEvery: number = 1000,
+  {
+    alpha = 0.1,
+    saveEvery = 1000,
+    preciseValue,
+  }: {
+    alpha?: number;
+    saveEvery?: number;
+    preciseValue?: number[][];
+  } = {},
 ) {
   const iters: QLearningIterInfo[] = [];
   const actionValue = mat(
@@ -230,7 +238,13 @@ export function demoQLearning(
       env.cols,
       (r, c) => actionValue[r][c][safeGetCellAction(policy, r, c)],
     );
-    iters.push({ step: stepCount, stateValue, policy });
+    const error = preciseValue
+      ? arr(env.rows * env.cols, i => {
+          const { r, c } = indexToRC(env, i);
+          return Math.abs(stateValue[r][c] - preciseValue[r][c]);
+        }).reduce((a, b) => Math.max(a, b), 0)
+      : undefined;
+    iters.push({ step: stepCount, stateValue, policy, error });
   };
   for (const episode of episodes) {
     for (let t = 0; t < episode.length - 1; t++) {

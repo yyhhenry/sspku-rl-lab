@@ -5,11 +5,17 @@ import {
   gridActionEnum,
   gridActionIcon,
   gridActionTransform,
+  optimalValueIteration,
   useGridEnv,
   useGridPolicy,
   useGridReward,
 } from "@/lib/grid-env";
-import { countStateAction, generateEpisode } from "@/lib/td-learning";
+import {
+  countStateAction,
+  demoQLearning,
+  generateEpisode,
+} from "@/lib/td-learning";
+import { mat } from "@/lib/tensor";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -32,12 +38,25 @@ export function QLearningPage() {
     });
   }, [runKey, epsilon]);
 
+  const preciseValue = useMemo(() => {
+    const iters = optimalValueIteration(env, reward, {
+      numIters: Infinity,
+      tolerance: 1e-6,
+    });
+    const preciseValue1D = iters[iters.length - 1]?.value;
+    return mat(env.rows, env.cols, (r, c) => preciseValue1D[r * env.cols + c]);
+  }, [env, reward]);
+
   const stateActionCount = useMemo(() => {
     return countStateAction(env, episode);
   }, [episode]);
   const maxCount = useMemo(() => {
     return Math.max(...Object.values(stateActionCount));
   }, [stateActionCount]);
+
+  const iters = useMemo(() => {
+    return demoQLearning(env, reward, [episode], { preciseValue });
+  }, [stateActionCount, preciseValue]);
 
   return (
     <div className="flex justify-center">
