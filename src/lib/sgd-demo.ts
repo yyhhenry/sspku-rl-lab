@@ -52,7 +52,7 @@ export interface SGDIterInfo {
   loss: number;
 }
 
-export function miniBatchSGDDemo(
+export function demoMiniBatchSGD(
   points: Point2D[],
   alphaFn: (k: number) => number,
   iterations: number,

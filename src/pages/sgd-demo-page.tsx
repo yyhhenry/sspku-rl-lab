@@ -12,8 +12,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   constantAlphaFn,
   convergentSequenceAlphaFn,
+  demoMiniBatchSGD,
   l2Dist,
-  miniBatchSGDDemo,
   randomPoints,
   standardAlphaFn,
   type Point2D,
@@ -73,7 +73,7 @@ function AlphaFunctionComparison() {
 
     const newResults = alphaConfigs.map(({ name, fn, color }) => ({
       name,
-      iters: miniBatchSGDDemo(newSamples, fn, iterations, initialW, 1),
+      iters: demoMiniBatchSGD(newSamples, fn, iterations, initialW, 1),
       color,
     }));
 
@@ -249,7 +249,7 @@ function BatchSizeComparison() {
     const newResults = batchConfigs.map(({ name, batchSize, color }) => ({
       name,
       batchSize,
-      iters: miniBatchSGDDemo(
+      iters: demoMiniBatchSGD(
         newSamples,
         alphaFn,
         iterations,

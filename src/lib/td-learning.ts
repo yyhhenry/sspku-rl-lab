@@ -78,7 +78,7 @@ export function countStateAction(
   return stateActionCount;
 }
 
-export function explorationAnalysisDemo(
+export function demoExplorationAnalysis(
   env: GridEnv,
   policy: GridPolicy,
   epsilon: number,
@@ -96,7 +96,7 @@ export interface MonteCarloIterInfo {
   maxError: number;
 }
 
-export function monteCarloDemo(
+export function demoMonteCarlo(
   env: GridEnv,
   reward: GridReward,
   {
@@ -188,5 +188,66 @@ export function monteCarloDemo(
     iters.push({ policy: newPolicy, actionValue: newValue, maxError });
   }
 
+  return iters;
+}
+
+export interface QLearningIterInfo {
+  step: number;
+  stateValue: number[][];
+  policy: GridPolicy;
+}
+
+export function demoQLearning(
+  env: GridEnv,
+  reward: GridReward,
+  episodes: GridEpisode[],
+  alpha: number = 0.1,
+  saveEvery: number = 1000,
+) {
+  const iters: QLearningIterInfo[] = [];
+  const actionValue = mat(
+    env.rows,
+    env.cols,
+    () =>
+      Object.fromEntries(gridActionEnum.map(action => [action, 0])) as Record<
+        GridAction,
+        number
+      >,
+  );
+  let stepCount = 0;
+  const saveStep = () => {
+    const policy: GridPolicy = {
+      actions: mat(env.rows, env.cols, (r, c) => {
+        return gridActionEnum.reduce((bestAction, action) => {
+          const bestQ = actionValue[r][c][bestAction];
+          const actionQ = actionValue[r][c][action];
+          return actionQ > bestQ ? action : bestAction;
+        }, gridActionEnum[0]);
+      }),
+    };
+    const stateValue = mat(
+      env.rows,
+      env.cols,
+      (r, c) => actionValue[r][c][safeGetCellAction(policy, r, c)],
+    );
+    iters.push({ step: stepCount, stateValue, policy });
+  };
+  for (const episode of episodes) {
+    for (let t = 0; t < episode.length - 1; t++) {
+      const { r, c, action } = episode[t];
+      const { r: nextR, c: nextC } = episode[t + 1];
+      const rewardValue = getActionReward(env, reward, r, c, action);
+      const maxNextQ = Math.max(
+        ...gridActionEnum.map(action => actionValue[nextR][nextC][action]),
+      );
+      const tdTarget = rewardValue + reward.gamma * maxNextQ;
+      const tdError = tdTarget - actionValue[r][c][action];
+      actionValue[r][c][action] += alpha * tdError;
+      stepCount += 1;
+      if (stepCount % saveEvery === 0) {
+        saveStep();
+      }
+    }
+  }
   return iters;
 }
