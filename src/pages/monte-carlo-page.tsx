@@ -38,26 +38,18 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 function EpsilonGreedyOptimality() {
   const [env] = useGridEnv();
   const [reward] = useGridReward();
-  const [epsilon, setEpsilon] = useState("0.0");
+  const [epsilon, setEpsilon] = useState("0.1");
   const [runKey, setRunKey] = useState(0);
 
   const [iters, setIters] = useState<MonteCarloIterInfo[]>([]);
   const [activeIter, setActiveIter] = useState(0);
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      const result = await monteCarloDemo(env, reward, {
-        epsilon: parseFloat(epsilon),
-        isAlive: () => mounted,
-      });
-      if (!mounted) return;
-      setIters(result);
-      setActiveIter(Math.max(0, result.length - 1));
-    })();
-    return () => {
-      mounted = false;
-    };
+    const result = monteCarloDemo(env, reward, {
+      epsilon: parseFloat(epsilon),
+    });
+    setIters(result);
+    setActiveIter(Math.max(0, result.length - 1));
   }, [env, reward, epsilon, runKey]);
 
   const policy = useMemo(
@@ -176,20 +168,13 @@ function EpsilonExplorationAnalysis() {
   >({});
 
   useEffect(() => {
-    let mounted = true;
-    explorationAnalysisDemo(
+    const result = explorationAnalysisDemo(
       env,
       policy,
       parseFloat(epsilon),
       episodeLength,
-      () => mounted,
-    ).then(({ stateActionCount }) => {
-      if (!mounted) return;
-      setStateActionCount(stateActionCount);
-    });
-    return () => {
-      mounted = false;
-    };
+    );
+    setStateActionCount(result.stateActionCount);
   }, [env, policy, epsilon, episodeLength, runKey]);
 
   const maxCount = useMemo(
@@ -219,7 +204,7 @@ function EpsilonExplorationAnalysis() {
     <div className="m-2">
       <div className="flex my-2 gap-2 items-center flex-wrap">
         <label className="m-2">Episode Length:</label>
-        {[1e2, 1e3, 1e4, 1e6].map(option => (
+        {[1e2, 1e3, 1e4].map(option => (
           <Button
             key={option}
             variant={option === episodeLength ? "default" : "link"}
