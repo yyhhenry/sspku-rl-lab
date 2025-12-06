@@ -153,24 +153,27 @@ export function QLearningPage() {
                   );
                 }}
               />
-              <GridView
-                className="my-2"
-                env={env}
-                cell={(r, c) => {
-                  const ActionIcon =
-                    gridActionIcon[safeGetCellAction(lastPolicy, r, c)];
-                  return <ActionIcon className="w-6 h-6" />;
-                }}
-              />
-              <GridView
-                className="my-2"
-                env={env}
-                cell={(r, c) => (
-                  <span className="text-xs">
-                    {lastStateValue[r][c]?.toFixed(1) ?? ""}
-                  </span>
-                )}
-              />
+              <div className="flex items-center gap-4 justify-center w-fit min-w-full flex-wrap">
+                <GridView
+                  className="my-2"
+                  env={env}
+                  cell={(r, c) => {
+                    const ActionIcon =
+                      gridActionIcon[safeGetCellAction(lastPolicy, r, c)];
+                    return <ActionIcon className="w-6 h-6" />;
+                  }}
+                />
+                <GridView
+                  className="my-2"
+                  env={env}
+                  cell={(r, c) => (
+                    <span className="text-xs">
+                      {lastStateValue[r][c]?.toFixed(1) ?? ""}
+                    </span>
+                  )}
+                />
+              </div>
+
               <ChartContainer
                 className="w-full"
                 config={{
