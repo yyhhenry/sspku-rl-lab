@@ -242,7 +242,8 @@ export function demoQLearning(
       ? arr(env.rows * env.cols, i => {
           const { r, c } = indexToRC(env, i);
           return Math.abs(stateValue[r][c] - preciseValue[r][c]);
-        }).reduce((a, b) => Math.max(a, b), 0)
+        }).reduce((a, b) => a + b, 0) /
+        (env.rows * env.cols)
       : undefined;
     steps.push({ step: stepCount, stateValue, policy, error });
   };
