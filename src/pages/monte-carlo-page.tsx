@@ -8,11 +8,6 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -120,35 +115,11 @@ function EpsilonGreedyOptimality() {
           <GridView
             className="my-2"
             env={env}
-            cell={(r, c) => {
-              return (
-                <HoverCard>
-                  <HoverCardTrigger asChild>
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-[10px] opacity-80">
-                        {cellBestValue[r]?.[c]?.toFixed(2) ?? ""}
-                      </span>
-                    </div>
-                  </HoverCardTrigger>
-                  <HoverCardContent>
-                    <div className="text-sm">
-                      <div>
-                        State ({r}, {c}) Action Values:
-                      </div>
-                      {gridActionEnum.map(action => (
-                        <div key={action} className="flex items-center gap-2">
-                          <span className="w-12 capitalize">{action}:</span>
-                          <span>
-                            {actionValue?.[r]?.[c]?.[action]?.toFixed(4) ??
-                              "N/A"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </HoverCardContent>
-                </HoverCard>
-              );
-            }}
+            cell={(r, c) => (
+              <span className="text-xs">
+                {cellBestValue?.[r]?.[c]?.toFixed(1) ?? ""}
+              </span>
+            )}
           />
         </div>
       </div>
