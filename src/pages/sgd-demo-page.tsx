@@ -176,7 +176,7 @@ function AlphaFunctionComparison() {
                 data={points}
                 fill={color}
                 shape="circle"
-                line
+                line={true}
                 lineType="joint"
               />
             ))}
