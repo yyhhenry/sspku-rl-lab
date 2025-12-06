@@ -48,12 +48,12 @@ export function generateEpisode(
 ): GridEpisode {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
-  for (const _ of range(episodeLength)) {
+  range(episodeLength).forEach(() => {
     const greedyAction = safeGetCellAction(policy, r, c);
     const action = epsilonGreedy(epsilon, greedyAction);
     episode.push({ r, c, action });
     ({ r, c } = getActionMove(env, r, c, action));
-  }
+  });
   return episode;
 }
 
@@ -191,7 +191,7 @@ export function demoMonteCarlo(
   return iters;
 }
 
-export interface QLearningIterInfo {
+export interface QLearningStepInfo {
   step: number;
   stateValue: number[][];
   policy: GridPolicy;
@@ -204,7 +204,7 @@ export function demoQLearning(
   episodes: GridEpisode[],
   {
     alpha = 0.1,
-    saveEvery = 1000,
+    saveEvery = 10000,
     preciseValue,
   }: {
     alpha?: number;
@@ -212,7 +212,7 @@ export function demoQLearning(
     preciseValue?: number[][];
   } = {},
 ) {
-  const iters: QLearningIterInfo[] = [];
+  const steps: QLearningStepInfo[] = [];
   const actionValue = mat(
     env.rows,
     env.cols,
@@ -244,8 +244,9 @@ export function demoQLearning(
           return Math.abs(stateValue[r][c] - preciseValue[r][c]);
         }).reduce((a, b) => Math.max(a, b), 0)
       : undefined;
-    iters.push({ step: stepCount, stateValue, policy, error });
+    steps.push({ step: stepCount, stateValue, policy, error });
   };
+  saveStep();
   for (const episode of episodes) {
     for (let t = 0; t < episode.length - 1; t++) {
       const { r, c, action } = episode[t];
@@ -263,5 +264,5 @@ export function demoQLearning(
       }
     }
   }
-  return iters;
+  return steps;
 }

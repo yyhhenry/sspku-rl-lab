@@ -2,10 +2,17 @@ import { GridView } from "@/components/grid-view";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  createDefaultGridPolicy,
   gridActionEnum,
   gridActionIcon,
   gridActionTransform,
   optimalValueIteration,
+  safeGetCellAction,
   useGridEnv,
   useGridPolicy,
   useGridReward,
@@ -20,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Line, LineChart, XAxis, YAxis } from "recharts";
 
 export function QLearningPage() {
   const [runKey, setRunKey] = useState(0);
@@ -31,12 +39,14 @@ export function QLearningPage() {
   const episodeLength = 1e5;
 
   const episode = useMemo(() => {
+    // dependency on runKey to rerun
+    (v => v)(runKey);
     return generateEpisode(env, policy, episodeLength, parseFloat(epsilon), {
       r: 0,
       c: 0,
       action: "idle",
     });
-  }, [runKey, epsilon]);
+  }, [runKey, env, policy, epsilon]);
 
   const preciseValue = useMemo(() => {
     const iters = optimalValueIteration(env, reward, {
@@ -49,14 +59,37 @@ export function QLearningPage() {
 
   const stateActionCount = useMemo(() => {
     return countStateAction(env, episode);
-  }, [episode]);
+  }, [env, episode]);
   const maxCount = useMemo(() => {
     return Math.max(...Object.values(stateActionCount));
   }, [stateActionCount]);
 
-  const iters = useMemo(() => {
+  const steps = useMemo(() => {
     return demoQLearning(env, reward, [episode], { preciseValue });
-  }, [stateActionCount, preciseValue]);
+  }, [env, reward, episode, preciseValue]);
+
+  const lastPolicy = useMemo(() => {
+    return steps[steps.length - 1]?.policy ?? createDefaultGridPolicy();
+  }, [steps]);
+
+  const lastStateValue = useMemo(() => {
+    return (
+      steps[steps.length - 1]?.stateValue ?? mat(env.rows, env.cols, () => 0)
+    );
+  }, [steps, env]);
+
+  const chartData = useMemo(() => {
+    return steps.flatMap(step =>
+      step.error !== undefined
+        ? [
+            {
+              step: step.step / 1e4,
+              error: step.error,
+            },
+          ]
+        : [],
+    );
+  }, [steps]);
 
   return (
     <div className="flex justify-center">
@@ -120,6 +153,65 @@ export function QLearningPage() {
                   );
                 }}
               />
+              <GridView
+                className="my-2"
+                env={env}
+                cell={(r, c) => {
+                  const ActionIcon =
+                    gridActionIcon[safeGetCellAction(lastPolicy, r, c)];
+                  return <ActionIcon className="w-6 h-6" />;
+                }}
+              />
+              <GridView
+                className="my-2"
+                env={env}
+                cell={(r, c) => (
+                  <span className="text-xs">
+                    {lastStateValue[r][c]?.toFixed(1) ?? ""}
+                  </span>
+                )}
+              />
+              <ChartContainer
+                className="w-full"
+                config={{
+                  error: {
+                    label: "Error",
+                    color: "var(--chart-1)",
+                  },
+                }}
+              >
+                <LineChart
+                  accessibilityLayer
+                  data={chartData}
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
+                  <XAxis
+                    dataKey="step"
+                    label={{
+                      value: "Step (×10,000)",
+                      offset: -10,
+                      position: "insideBottom",
+                    }}
+                  />
+                  <YAxis
+                    dataKey="error"
+                    label={{
+                      value: "Error",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
+                  />
+                  <ChartTooltip
+                    content={<ChartTooltipContent hideLabel={true} />}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="error"
+                    stroke="var(--chart-1)"
+                    dot={false}
+                  />
+                </LineChart>
+              </ChartContainer>
             </div>
           </div>
         </CardContent>
