@@ -231,7 +231,7 @@ export function getPolicyExamples(
       },
     },
     {
-      name: "Policy 3",
+      name: "Right Only",
       rows: 5,
       cols: 5,
       policy: {
@@ -241,6 +241,20 @@ export function getPolicyExamples(
           ["right", "right", "right", "right", "right"],
           ["right", "right", "right", "right", "right"],
           ["right", "right", "right", "right", "right"],
+        ],
+      },
+    },
+    {
+      name: "Q-Learning Example",
+      rows: 5,
+      cols: 5,
+      policy: {
+        actions: [
+          ["up", "idle", "left", "right", "right"],
+          ["right", "right", "left", "up", "left"],
+          ["right", "left", "left", "right", "down"],
+          ["idle", "left", "left", "idle", "down"],
+          ["left", "up", "up", "left", "down"],
         ],
       },
     },
