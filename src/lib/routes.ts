@@ -2,14 +2,16 @@ import { EnvironmentPage } from "@/pages/environment-page";
 import { MonteCarloPage } from "@/pages/monte-carlo-page";
 import { OptimalityEquationPage } from "@/pages/optimality-equation-page";
 import { PolicyPage } from "@/pages/policy-page";
+import { QLearningPage } from "@/pages/q-learning-page";
 import { RewardPage } from "@/pages/reward-page";
 import { SGDDemoPage } from "@/pages/sgd-demo-page";
 import {
   Dices,
   Grid,
+  Layers2,
   Lollipop,
+  Radar,
   SquarePi,
-  TrendingDown,
   Workflow,
 } from "lucide-react";
 
@@ -53,7 +55,13 @@ export const routes: RouteItem[] = [
   {
     path: "/sgd-demo",
     name: "SGD Demo",
-    icon: TrendingDown,
+    icon: Radar,
     page: SGDDemoPage,
+  },
+  {
+    path: "/q-learning",
+    name: "Q-Learning",
+    icon: Layers2,
+    page: QLearningPage,
   },
 ] as const;

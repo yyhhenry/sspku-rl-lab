@@ -48,12 +48,12 @@ export function generateEpisode(
 ): GridEpisode {
   const episode = [start];
   let { r, c } = getActionMove(env, start.r, start.c, start.action);
-  for (const _ of range(episodeLength)) {
+  range(episodeLength).forEach(() => {
     const greedyAction = safeGetCellAction(policy, r, c);
     const action = epsilonGreedy(epsilon, greedyAction);
     episode.push({ r, c, action });
     ({ r, c } = getActionMove(env, r, c, action));
-  }
+  });
   return episode;
 }
 
@@ -78,7 +78,7 @@ export function countStateAction(
   return stateActionCount;
 }
 
-export function explorationAnalysisDemo(
+export function demoExplorationAnalysis(
   env: GridEnv,
   policy: GridPolicy,
   epsilon: number,
@@ -96,7 +96,7 @@ export interface MonteCarloIterInfo {
   maxError: number;
 }
 
-export function monteCarloDemo(
+export function demoMonteCarlo(
   env: GridEnv,
   reward: GridReward,
   {
@@ -189,4 +189,80 @@ export function monteCarloDemo(
   }
 
   return iters;
+}
+
+export interface QLearningStepInfo {
+  step: number;
+  stateValue: number[][];
+  policy: GridPolicy;
+  error?: number;
+}
+
+export function demoQLearning(
+  env: GridEnv,
+  reward: GridReward,
+  episodes: GridEpisode[],
+  {
+    alpha = 0.1,
+    saveEvery = 10000,
+    preciseValue,
+  }: {
+    alpha?: number;
+    saveEvery?: number;
+    preciseValue?: number[][];
+  } = {},
+) {
+  const steps: QLearningStepInfo[] = [];
+  const actionValue = mat(
+    env.rows,
+    env.cols,
+    () =>
+      Object.fromEntries(gridActionEnum.map(action => [action, 0])) as Record<
+        GridAction,
+        number
+      >,
+  );
+  let stepCount = 0;
+  const saveStep = () => {
+    const policy: GridPolicy = {
+      actions: mat(env.rows, env.cols, (r, c) => {
+        return gridActionEnum.reduce((bestAction, action) => {
+          const bestQ = actionValue[r][c][bestAction];
+          const actionQ = actionValue[r][c][action];
+          return actionQ > bestQ ? action : bestAction;
+        }, gridActionEnum[0]);
+      }),
+    };
+    const stateValue = mat(
+      env.rows,
+      env.cols,
+      (r, c) => actionValue[r][c][safeGetCellAction(policy, r, c)],
+    );
+    const error = preciseValue
+      ? arr(env.rows * env.cols, i => {
+          const { r, c } = indexToRC(env, i);
+          return Math.abs(stateValue[r][c] - preciseValue[r][c]);
+        }).reduce((a, b) => Math.max(a, b), 0)
+      : undefined;
+    steps.push({ step: stepCount, stateValue, policy, error });
+  };
+  saveStep();
+  for (const episode of episodes) {
+    for (let t = 0; t < episode.length - 1; t++) {
+      const { r, c, action } = episode[t];
+      const { r: nextR, c: nextC } = episode[t + 1];
+      const rewardValue = getActionReward(env, reward, r, c, action);
+      const maxNextQ = Math.max(
+        ...gridActionEnum.map(action => actionValue[nextR][nextC][action]),
+      );
+      const tdTarget = rewardValue + reward.gamma * maxNextQ;
+      const tdError = tdTarget - actionValue[r][c][action];
+      actionValue[r][c][action] += alpha * tdError;
+      stepCount += 1;
+      if (stepCount % saveEvery === 0) {
+        saveStep();
+      }
+    }
+  }
+  return steps;
 }

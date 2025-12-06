@@ -25,10 +25,10 @@ import {
   useGridReward,
 } from "@/lib/grid-env";
 import {
-  explorationAnalysisDemo,
-  monteCarloDemo,
+  demoExplorationAnalysis,
+  demoMonteCarlo,
   type MonteCarloIterInfo,
-} from "@/lib/monte-carlo";
+} from "@/lib/td-learning";
 import { cn } from "@/lib/utils";
 import { ArrowUpRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -45,7 +45,7 @@ function EpsilonGreedyOptimality() {
   const [activeIter, setActiveIter] = useState(0);
 
   useEffect(() => {
-    const result = monteCarloDemo(env, reward, {
+    const result = demoMonteCarlo(env, reward, {
       epsilon: parseFloat(epsilon),
     });
     setIters(result);
@@ -168,7 +168,7 @@ function EpsilonExplorationAnalysis() {
   >({});
 
   useEffect(() => {
-    const result = explorationAnalysisDemo(
+    const result = demoExplorationAnalysis(
       env,
       policy,
       parseFloat(epsilon),
