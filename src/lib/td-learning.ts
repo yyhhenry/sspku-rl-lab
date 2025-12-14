@@ -267,3 +267,67 @@ export function demoQLearning(
   }
   return steps;
 }
+
+export function binaryFeatures(
+  r: number,
+  c: number,
+  maxDegree: number,
+): number[] {
+  const features: number[] = [];
+  for (let dr = 0; dr <= maxDegree; dr++) {
+    for (let dc = 0; dc <= maxDegree - dr; dc++) {
+      features.push((r + 1) ** dr * (c + 1) ** dc); // 1-based
+    }
+  }
+  return features;
+}
+
+export function demoTDLinear(
+  env: GridEnv,
+  reward: GridReward,
+  {
+    alpha = 0.1,
+    maxDegree = 3,
+    numEpisodes = 500,
+    episodeLength = 500,
+  }: {
+    alpha?: number;
+    maxDegree?: number;
+    numEpisodes?: number;
+    episodeLength?: number;
+  } = {},
+) {
+  // policy is never used since epsilon=1.0
+  const policy = createDefaultGridPolicy();
+
+  const weights = binaryFeatures(0, 0, maxDegree).map(() => 0);
+
+  const getValue = (r: number, c: number) => {
+    const features = binaryFeatures(r, c, maxDegree);
+    return features.reduce((sum, f, i) => sum + f * weights[i], 0);
+  };
+
+  const randomStart = () => {
+    const r = Math.floor(Math.random() * env.rows);
+    const c = Math.floor(Math.random() * env.cols);
+    const action =
+      gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)];
+    return { r, c, action };
+  };
+  const newEpisode = () =>
+    generateEpisode(env, policy, episodeLength, 1.0, randomStart());
+
+  for (const episode of arr(numEpisodes, newEpisode)) {
+    for (let t = 0; t < episode.length - 1; t++) {
+      const { r, c } = episode[t];
+      const { r: nextR, c: nextC } = episode[t + 1];
+      const rewardValue = getActionReward(env, reward, r, c, episode[t].action);
+      const tdTarget = rewardValue + reward.gamma * getValue(nextR, nextC);
+      const tdError = tdTarget - getValue(r, c);
+      const features = binaryFeatures(r, c, maxDegree);
+      for (let i = 0; i < weights.length; i++) {
+        weights[i] += alpha * tdError * features[i];
+      }
+    }
+  }
+}
