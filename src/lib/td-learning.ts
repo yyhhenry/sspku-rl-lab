@@ -268,15 +268,18 @@ export function demoQLearning(
   return steps;
 }
 
-export function binaryFeatures(
+export function polynomialFeatures(
+  env: GridEnv,
   r: number,
   c: number,
   maxDegree: number,
 ): number[] {
   const features: number[] = [];
+  const rVal = (r + 1) / env.rows;
+  const cVal = (c + 1) / env.cols;
   for (let dr = 0; dr <= maxDegree; dr++) {
-    for (let dc = 0; dc <= maxDegree - dr; dc++) {
-      features.push((r + 1) ** dr * (c + 1) ** dc); // 1-based
+    for (let dc = 0; dr + dc <= maxDegree; dc++) {
+      features.push(rVal ** dr * cVal ** dc);
     }
   }
   return features;
@@ -286,16 +289,26 @@ export function demoTDLinearGroundTruth(
   env: GridEnv,
   reward: GridReward,
   {
+    maxIters = 1000,
     maxDiff = 1e-6,
   }: {
+    maxIters?: number;
     maxDiff?: number;
   } = {},
 ) {
   const transitionMatrix = mat(
     env.rows * env.cols,
     env.rows * env.cols,
-    () => 1 / gridActionEnum.length,
+    () => 0,
   );
+  range(env.rows * env.cols).forEach(fromIdx => {
+    const { r: fromR, c: fromC } = indexToRC(env, fromIdx);
+    gridActionEnum.forEach(action => {
+      const { r: toR, c: toC } = getActionMove(env, fromR, fromC, action);
+      const toIdx = toR * env.cols + toC;
+      transitionMatrix[fromIdx][toIdx] += 1 / gridActionEnum.length;
+    });
+  });
   const rewardVector = arr(env.rows * env.cols, idx => {
     const { r, c } = indexToRC(env, idx);
     return (
@@ -306,7 +319,7 @@ export function demoTDLinearGroundTruth(
   });
 
   let valueTensor = arr(env.rows * env.cols, () => 0);
-  while (true) {
+  for (let iter = 0; iter < maxIters; iter++) {
     const newValueTensor = applyMatrixToVector(
       transitionMatrix,
       valueTensor,
@@ -326,12 +339,13 @@ export function demoTDLinearGroundTruth(
 }
 
 export function getTDLinearValue(
+  env: GridEnv,
   r: number,
   c: number,
   weights: number[],
   maxDegree: number,
 ) {
-  const features = binaryFeatures(r, c, maxDegree);
+  const features = polynomialFeatures(env, r, c, maxDegree);
   return features.reduce((sum, f, i) => sum + f * weights[i], 0);
 }
 
@@ -340,7 +354,7 @@ export function demoTDLinear(
   reward: GridReward,
   groundTruth: number[][],
   {
-    alpha = 5e-3,
+    alpha = 5e-4,
     maxDegree = 3,
     numEpisodes = 500,
     episodeLength = 500,
@@ -351,10 +365,10 @@ export function demoTDLinear(
     episodeLength?: number;
   } = {},
 ) {
-  const weights = binaryFeatures(0, 0, maxDegree).map(() => 0);
+  const weights = polynomialFeatures(env, 0, 0, maxDegree).map(() => 0);
 
   const getValue = (r: number, c: number) =>
-    getTDLinearValue(r, c, weights, maxDegree);
+    getTDLinearValue(env, r, c, weights, maxDegree);
   const getRootMeanSquareError = () => {
     const meanSqr =
       arr(env.rows * env.cols, idx => {
@@ -400,7 +414,7 @@ export function demoTDLinear(
       const rewardValue = getActionReward(env, reward, r, c, episode[t].action);
       const tdTarget = rewardValue + reward.gamma * getValue(nextR, nextC);
       const tdError = tdTarget - getValue(r, c);
-      const features = binaryFeatures(r, c, maxDegree);
+      const features = polynomialFeatures(env, r, c, maxDegree);
       for (let i = 0; i < weights.length; i++) {
         weights[i] += alpha * tdError * features[i];
       }

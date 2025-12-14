@@ -5,6 +5,7 @@ import { PolicyPage } from "@/pages/policy-page";
 import { QLearningPage } from "@/pages/q-learning-page";
 import { RewardPage } from "@/pages/reward-page";
 import { SGDDemoPage } from "@/pages/sgd-demo-page";
+import { TDLinearPage } from "@/pages/td-linear-page";
 import {
   Dices,
   Grid,
@@ -12,6 +13,7 @@ import {
   Lollipop,
   Radar,
   SquarePi,
+  Waypoints,
   Workflow,
 } from "lucide-react";
 
@@ -61,7 +63,13 @@ export const routes: RouteItem[] = [
   {
     path: "/q-learning",
     name: "Q-Learning",
-    icon: Layers2,
+    icon: Waypoints,
     page: QLearningPage,
+  },
+  {
+    path: "/td-linear",
+    name: "TD Linear",
+    icon: Layers2,
+    page: TDLinearPage,
   },
 ] as const;
