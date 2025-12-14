@@ -19,7 +19,9 @@ export function TDLinearSurface({
     const cols = values[0]?.length ?? 0;
 
     const textColor = isDark ? "rgb(200, 200, 200)" : "rgb(50, 50, 50)";
-    const backgroundColor = isDark ? "rgb(15, 23, 42)" : "rgb(250, 250, 250)";
+    const tooltipBackgroundColor = isDark
+      ? "rgba(15, 23, 42, 0.7)"
+      : "rgba(250, 250, 250, 0.7)";
 
     const data: Array<[number, number, number]> = [];
     for (let r = 0; r < rows; r += 1) {
@@ -35,7 +37,7 @@ export function TDLinearSurface({
 
     return {
       tooltip: {
-        backgroundColor: backgroundColor,
+        backgroundColor: tooltipBackgroundColor,
         borderColor: textColor,
         borderWidth: 1,
         textStyle: { color: textColor },
