@@ -10,7 +10,7 @@ import {
   type GridPolicy,
   type GridReward,
 } from "./grid-env";
-import { arr, mat, range } from "./tensor";
+import { applyMatrixToVector, arr, mat, range } from "./tensor";
 
 export interface GridEpisodeStep {
   r: number;
@@ -266,4 +266,170 @@ export function demoQLearning(
     }
   }
   return steps;
+}
+
+export function polynomialFeatures(
+  env: GridEnv,
+  r: number,
+  c: number,
+  maxDegree: number,
+): number[] {
+  const features: number[] = [];
+  const rVal = (r + 1) / env.rows;
+  const cVal = (c + 1) / env.cols;
+  for (let dr = 0; dr <= maxDegree; dr++) {
+    for (let dc = 0; dr + dc <= maxDegree; dc++) {
+      features.push(rVal ** dr * cVal ** dc);
+    }
+  }
+  return features;
+}
+
+export function demoTDLinearGroundTruth(
+  env: GridEnv,
+  reward: GridReward,
+  {
+    maxIters = 1000,
+    maxDiff = 1e-6,
+  }: {
+    maxIters?: number;
+    maxDiff?: number;
+  } = {},
+) {
+  const transitionMatrix = mat(
+    env.rows * env.cols,
+    env.rows * env.cols,
+    () => 0,
+  );
+  range(env.rows * env.cols).forEach(fromIdx => {
+    const { r: fromR, c: fromC } = indexToRC(env, fromIdx);
+    gridActionEnum.forEach(action => {
+      const { r: toR, c: toC } = getActionMove(env, fromR, fromC, action);
+      const toIdx = toR * env.cols + toC;
+      transitionMatrix[fromIdx][toIdx] += 1 / gridActionEnum.length;
+    });
+  });
+  const rewardVector = arr(env.rows * env.cols, idx => {
+    const { r, c } = indexToRC(env, idx);
+    return (
+      gridActionEnum
+        .map(action => getActionReward(env, reward, r, c, action))
+        .reduce((a, b) => a + b, 0) / gridActionEnum.length
+    );
+  });
+
+  let valueTensor = arr(env.rows * env.cols, () => 0);
+  for (let iter = 0; iter < maxIters; iter++) {
+    const newValueTensor = applyMatrixToVector(
+      transitionMatrix,
+      valueTensor,
+    ).map((v, i) => rewardVector[i] + reward.gamma * v);
+    const maxDiffValue = arr(env.rows * env.cols, i =>
+      Math.abs(newValueTensor[i] - valueTensor[i]),
+    ).reduce((a, b) => Math.max(a, b), 0);
+    if (maxDiffValue < maxDiff) {
+      break;
+    }
+    valueTensor = newValueTensor;
+  }
+  return mat(env.rows, env.cols, (r, c) => {
+    const idx = r * env.cols + c;
+    return valueTensor[idx];
+  });
+}
+
+export function getTDLinearValue(
+  env: GridEnv,
+  r: number,
+  c: number,
+  weights: number[],
+  maxDegree: number,
+) {
+  const features = polynomialFeatures(env, r, c, maxDegree);
+  return features.reduce((sum, f, i) => sum + f * weights[i], 0);
+}
+
+export function demoTDLinear(
+  env: GridEnv,
+  reward: GridReward,
+  groundTruth: number[][],
+  {
+    alpha = 5e-4,
+    maxDegree = 3,
+    numEpisodes = 500,
+    episodeLength = 500,
+    saveEvery = 50,
+  }: {
+    alpha?: number;
+    maxDegree?: number;
+    numEpisodes?: number;
+    episodeLength?: number;
+    saveEvery?: number;
+  } = {},
+) {
+  const weights = polynomialFeatures(env, 0, 0, maxDegree).map(() => 0);
+
+  const getValue = (r: number, c: number) =>
+    getTDLinearValue(env, r, c, weights, maxDegree);
+  const getRootMeanSquareError = () => {
+    const meanSqr =
+      arr(env.rows * env.cols, idx => {
+        const { r, c } = indexToRC(env, idx);
+        const pred = getValue(r, c);
+        const truth = groundTruth[r][c];
+        return (pred - truth) ** 2;
+      }).reduce((a, b) => a + b, 0) /
+      (env.rows * env.cols);
+
+    return Math.sqrt(meanSqr);
+  };
+
+  const iters = [
+    {
+      iter: 0,
+      weights: [...weights],
+      error: getRootMeanSquareError(),
+    },
+  ];
+
+  const randomStart = () => {
+    const r = Math.floor(Math.random() * env.rows);
+    const c = Math.floor(Math.random() * env.cols);
+    const action =
+      gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)];
+    return { r, c, action };
+  };
+  const newEpisode = () => {
+    // policy is never used since epsilon=1.0
+    return generateEpisode(
+      env,
+      createDefaultGridPolicy(),
+      episodeLength,
+      1.0,
+      randomStart(),
+    );
+  };
+
+  for (const idx of range(numEpisodes)) {
+    const episode = newEpisode();
+    for (let t = 0; t < episode.length - 1; t++) {
+      const { r, c } = episode[t];
+      const { r: nextR, c: nextC } = episode[t + 1];
+      const rewardValue = getActionReward(env, reward, r, c, episode[t].action);
+      const tdTarget = rewardValue + reward.gamma * getValue(nextR, nextC);
+      const tdError = tdTarget - getValue(r, c);
+      const features = polynomialFeatures(env, r, c, maxDegree);
+      for (let i = 0; i < weights.length; i++) {
+        weights[i] += alpha * tdError * features[i];
+      }
+    }
+    if ((idx + 1) % saveEvery === 0) {
+      iters.push({
+        iter: idx + 1,
+        weights: [...weights],
+        error: getRootMeanSquareError(),
+      });
+    }
+  }
+  return iters;
 }

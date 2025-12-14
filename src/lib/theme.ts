@@ -8,8 +8,16 @@ export type Theme = z.infer<typeof ThemeSchema>;
 export const useTheme = createZodStore(
   "theme",
   ThemeSchema,
-  () => "system" as Theme
+  () => "system" as Theme,
 );
+
+export function useIsDark() {
+  const [theme] = useTheme();
+  const isSystemDark =
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return theme === "dark" || (theme === "system" && isSystemDark);
+}
 
 export function applyTheme(theme: Theme) {
   const root = window.document.documentElement;
