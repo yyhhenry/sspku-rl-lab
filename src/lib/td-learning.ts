@@ -358,11 +358,13 @@ export function demoTDLinear(
     maxDegree = 3,
     numEpisodes = 500,
     episodeLength = 500,
+    saveEvery = 50,
   }: {
     alpha?: number;
     maxDegree?: number;
     numEpisodes?: number;
     episodeLength?: number;
+    saveEvery?: number;
   } = {},
 ) {
   const weights = polynomialFeatures(env, 0, 0, maxDegree).map(() => 0);
@@ -384,6 +386,7 @@ export function demoTDLinear(
 
   const iters = [
     {
+      iter: 0,
       weights: [...weights],
       error: getRootMeanSquareError(),
     },
@@ -407,7 +410,8 @@ export function demoTDLinear(
     );
   };
 
-  for (const episode of arr(numEpisodes, newEpisode)) {
+  for (const idx of range(numEpisodes)) {
+    const episode = newEpisode();
     for (let t = 0; t < episode.length - 1; t++) {
       const { r, c } = episode[t];
       const { r: nextR, c: nextC } = episode[t + 1];
@@ -419,10 +423,13 @@ export function demoTDLinear(
         weights[i] += alpha * tdError * features[i];
       }
     }
-    iters.push({
-      weights: [...weights],
-      error: getRootMeanSquareError(),
-    });
+    if ((idx + 1) % saveEvery === 0) {
+      iters.push({
+        iter: idx + 1,
+        weights: [...weights],
+        error: getRootMeanSquareError(),
+      });
+    }
   }
   return iters;
 }

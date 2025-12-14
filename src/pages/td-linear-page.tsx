@@ -1,4 +1,3 @@
-import { TDLinearSurface } from "@/components/td-linear-surface";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -6,15 +5,20 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useGridEnv, useGridReward } from "@/lib/grid-env";
+import { indexToRC, useGridEnv, useGridReward } from "@/lib/grid-env";
 import {
   demoTDLinear,
   demoTDLinearGroundTruth,
   getTDLinearValue,
 } from "@/lib/td-learning";
-import { mat } from "@/lib/tensor";
+import { arr, mat } from "@/lib/tensor";
+import { useIsDark } from "@/lib/theme";
+import * as echarts from "echarts";
+import ReactECharts from "echarts-for-react";
+import "echarts-gl";
 import { useMemo, useState } from "react";
 import { Line, LineChart, XAxis, YAxis } from "recharts";
+import z from "zod";
 
 export function TDLinearPage() {
   const [runKey, setRunKey] = useState(0);
@@ -42,11 +46,127 @@ export function TDLinearPage() {
   }, [steps, env, maxDegree]);
 
   const chartData = useMemo(() => {
-    return steps.map((step, idx) => ({
-      iter: idx,
+    return steps.map(step => ({
+      iter: step.iter,
       error: step.error,
     }));
   }, [steps]);
+
+  const isDark = useIsDark();
+  const option = useMemo(() => {
+    const textColor = isDark ? "rgb(200, 200, 200)" : "rgb(50, 50, 50)";
+    const tooltipBackgroundColor = isDark
+      ? "rgba(15, 23, 42, 0.7)"
+      : "rgba(250, 250, 250, 0.7)";
+
+    const data = arr(env.rows * env.cols, idx => {
+      const { r, c } = indexToRC(env, idx);
+      return [r + 1, c + 1, stateValue[r][c]];
+    });
+
+    const zRange = data
+      .map(point => point[2])
+      .reduce(
+        (acc, val) => ({
+          min: Math.min(acc.min, val),
+          max: Math.max(acc.max, val),
+        }),
+        { min: Infinity, max: -Infinity },
+      );
+    const zPad = 0.1 * (zRange.max - zRange.min);
+    const zRangeWithPadding = {
+      min: (zRange.min - zPad).toFixed(1),
+      max: (zRange.max + zPad).toFixed(1),
+    };
+
+    const FormatValueType = z.object({
+      data: z.tuple([z.number(), z.number(), z.number()]),
+    });
+
+    return {
+      tooltip: {
+        backgroundColor: tooltipBackgroundColor,
+        borderColor: textColor,
+        borderWidth: 1,
+        textStyle: { color: textColor },
+        formatter: (value: unknown) => {
+          const result = FormatValueType.safeParse(value);
+          if (!result.success) {
+            return "Error parsing value";
+          }
+          const [x, y, z] = result.data.data;
+          return `Row: ${x}<br/>Col: ${y}<br/>Value: ${z.toFixed(4)}`;
+        },
+      },
+      visualMap: {
+        min: zRange.min,
+        max: zRange.max,
+        show: false,
+        orient: "vertical",
+        left: "left",
+        top: "middle",
+        inRange: {
+          color: [
+            "#313695dd",
+            "#4575b4dd",
+            "#74add1dd",
+            "#abd9e9dd",
+            "#e0f3f8dd",
+            "#ffffbfdd",
+            "#fee090dd",
+            "#fdae61dd",
+            "#f46d43dd",
+            "#d73027dd",
+            "#a50026dd",
+          ],
+        },
+        textStyle: { color: textColor },
+      },
+      xAxis3D: {
+        type: "value",
+        name: "row",
+        min: 1,
+        max: env.rows,
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: textColor } },
+      },
+      yAxis3D: {
+        type: "value",
+        name: "col",
+        min: 1,
+        max: env.cols,
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: textColor } },
+      },
+      zAxis3D: {
+        type: "value",
+        name: "",
+        min: zRangeWithPadding.min,
+        max: zRangeWithPadding.max,
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor, margin: 25 },
+        axisLine: { lineStyle: { color: textColor } },
+      },
+      grid3D: {
+        boxHeight: 80,
+        viewControl: {
+          projection: "perspective",
+          alpha: 20,
+          beta: 65,
+        },
+      },
+      series: [
+        {
+          type: "surface",
+          data,
+          shading: "realistic",
+          wireframe: {},
+        },
+      ],
+    } as echarts.EChartsOption;
+  }, [isDark, stateValue, env]);
 
   return (
     <div className="flex justify-center">
@@ -70,13 +190,17 @@ export function TDLinearPage() {
 
           <div className="overflow-x-auto">
             <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-              <TDLinearSurface values={stateValue} />
+              <ReactECharts
+                echarts={echarts}
+                option={option}
+                style={{ width: "100%", height: 400 }}
+              />
 
               <ChartContainer
                 className="w-full"
                 config={{
                   error: {
-                    label: "RootMSE",
+                    label: "State Value Error",
                     color: "var(--chart-1)",
                   },
                 }}
@@ -97,7 +221,7 @@ export function TDLinearPage() {
                   <YAxis
                     dataKey="error"
                     label={{
-                      value: "RootMSE",
+                      value: "State Value Error",
                       angle: -90,
                       position: "insideLeft",
                     }}
