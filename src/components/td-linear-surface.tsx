@@ -32,6 +32,9 @@ export function TDLinearSurface({
 
     return {
       tooltip: {
+        backgroundColor: "rgba(15, 23, 42, 0.9)",
+        borderColor: textColor,
+        borderWidth: 1,
         textStyle: { color: textColor },
       },
       visualMap: {
@@ -68,7 +71,7 @@ export function TDLinearSurface({
         type: "value",
         name: "V(s)",
         nameTextStyle: { color: textColor },
-        axisLabel: { color: textColor },
+        axisLabel: { color: textColor, margin: 14 },
         axisLine: { lineStyle: { color: textColor } },
       },
       grid3D: {
