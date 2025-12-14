@@ -16,10 +16,13 @@ export function TDLinearSurface({
     const rows = values.length;
     const cols = values[0]?.length ?? 0;
 
+    const textColor = "#e5e7eb"; // light gray for dark backgrounds
+
     const data: Array<[number, number, number]> = [];
     for (let r = 0; r < rows; r += 1) {
       for (let c = 0; c < cols; c += 1) {
-        data.push([c, rows - 1 - r, values[r]?.[c] ?? 0]);
+        // Use 1-based coordinates and swap axis orientation to match row/col expectation.
+        data.push([r + 1, c + 1, values[r]?.[c] ?? 0]);
       }
     }
 
@@ -28,7 +31,9 @@ export function TDLinearSurface({
     const zMax = zValues.length ? Math.max(...zValues) : 0;
 
     return {
-      tooltip: {},
+      tooltip: {
+        textStyle: { color: textColor },
+      },
       visualMap: {
         min: zMin,
         max: zMax,
@@ -39,10 +44,33 @@ export function TDLinearSurface({
         inRange: {
           color: ["#2c7bb6", "#ffffbf", "#d7191c"],
         },
+        textStyle: { color: textColor },
       },
-      xAxis3D: { type: "value", name: "col" },
-      yAxis3D: { type: "value", name: "row" },
-      zAxis3D: { type: "value", name: "V(s)" },
+      xAxis3D: {
+        type: "value",
+        name: "row",
+        min: 1,
+        max: rows,
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: textColor } },
+      },
+      yAxis3D: {
+        type: "value",
+        name: "col",
+        min: 1,
+        max: cols,
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: textColor } },
+      },
+      zAxis3D: {
+        type: "value",
+        name: "V(s)",
+        nameTextStyle: { color: textColor },
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: textColor } },
+      },
       grid3D: {
         boxHeight: 80,
         viewControl: { projection: "perspective" },
