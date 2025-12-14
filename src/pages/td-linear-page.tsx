@@ -1,4 +1,4 @@
-import { GridView } from "@/components/grid-view";
+import { TDLinearSurface } from "@/components/td-linear-surface";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -34,7 +34,7 @@ export function TDLinearPage() {
     });
   }, [runKey, env, reward, groundTruth, maxDegree]);
 
-  const currentStateValue = useMemo(() => {
+  const stateValue = useMemo(() => {
     const weights = steps[steps.length - 1]?.weights ?? [];
     return mat(env.rows, env.cols, (r, c) => {
       return getTDLinearValue(env, r, c, weights, maxDegree);
@@ -70,17 +70,7 @@ export function TDLinearPage() {
 
           <div className="overflow-x-auto">
             <div className="flex flex-col items-center gap-4 my-2 w-fit min-w-full">
-              <div className="flex items-center gap-4 justify-center w-fit min-w-full flex-wrap">
-                <GridView
-                  className="my-2"
-                  env={env}
-                  cell={(r, c) => (
-                    <span className="text-xs">
-                      {currentStateValue[r][c]?.toFixed(1) ?? ""}
-                    </span>
-                  )}
-                />
-              </div>
+              <TDLinearSurface values={stateValue} />
 
               <ChartContainer
                 className="w-full"
