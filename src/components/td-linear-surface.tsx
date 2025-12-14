@@ -1,3 +1,4 @@
+import { useIsDark } from "@/lib/theme";
 import * as echarts from "echarts";
 import ReactECharts from "echarts-for-react";
 import "echarts-gl";
@@ -12,11 +13,13 @@ export function TDLinearSurface({
   values,
   height = 420,
 }: TDLinearSurfaceProps) {
+  const isDark = useIsDark();
   const option = useMemo(() => {
     const rows = values.length;
     const cols = values[0]?.length ?? 0;
 
-    const textColor = "#e5e7eb"; // light gray for dark backgrounds
+    const textColor = isDark ? "rgb(200, 200, 200)" : "rgb(50, 50, 50)";
+    const backgroundColor = isDark ? "rgb(15, 23, 42)" : "rgb(250, 250, 250)";
 
     const data: Array<[number, number, number]> = [];
     for (let r = 0; r < rows; r += 1) {
@@ -32,7 +35,7 @@ export function TDLinearSurface({
 
     return {
       tooltip: {
-        backgroundColor: "rgba(15, 23, 42, 0.9)",
+        backgroundColor: backgroundColor,
         borderColor: textColor,
         borderWidth: 1,
         textStyle: { color: textColor },
@@ -87,7 +90,7 @@ export function TDLinearSurface({
         },
       ],
     };
-  }, [values]);
+  }, [isDark, values]);
 
   return (
     <ReactECharts
