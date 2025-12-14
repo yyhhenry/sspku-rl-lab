@@ -10,7 +10,7 @@ import {
   type GridPolicy,
   type GridReward,
 } from "./grid-env";
-import { arr, mat, range } from "./tensor";
+import { applyMatrixToVector, arr, mat, range } from "./tensor";
 
 export interface GridEpisodeStep {
   r: number;
@@ -282,11 +282,65 @@ export function binaryFeatures(
   return features;
 }
 
-export function demoTDLinear(
+export function demoTDLinearGroundTruth(
   env: GridEnv,
   reward: GridReward,
   {
-    alpha = 0.1,
+    maxDiff = 1e-6,
+  }: {
+    maxDiff?: number;
+  } = {},
+) {
+  const transitionMatrix = mat(
+    env.rows * env.cols,
+    env.rows * env.cols,
+    () => 1 / gridActionEnum.length,
+  );
+  const rewardVector = arr(env.rows * env.cols, idx => {
+    const { r, c } = indexToRC(env, idx);
+    return (
+      gridActionEnum
+        .map(action => getActionReward(env, reward, r, c, action))
+        .reduce((a, b) => a + b, 0) / gridActionEnum.length
+    );
+  });
+
+  let valueTensor = arr(env.rows * env.cols, () => 0);
+  while (true) {
+    const newValueTensor = applyMatrixToVector(
+      transitionMatrix,
+      valueTensor,
+    ).map((v, i) => rewardVector[i] + reward.gamma * v);
+    const maxDiffValue = arr(env.rows * env.cols, i =>
+      Math.abs(newValueTensor[i] - valueTensor[i]),
+    ).reduce((a, b) => Math.max(a, b), 0);
+    if (maxDiffValue < maxDiff) {
+      break;
+    }
+    valueTensor = newValueTensor;
+  }
+  return mat(env.rows, env.cols, (r, c) => {
+    const idx = r * env.cols + c;
+    return valueTensor[idx];
+  });
+}
+
+export function getTDLinearValue(
+  r: number,
+  c: number,
+  weights: number[],
+  maxDegree: number,
+) {
+  const features = binaryFeatures(r, c, maxDegree);
+  return features.reduce((sum, f, i) => sum + f * weights[i], 0);
+}
+
+export function demoTDLinear(
+  env: GridEnv,
+  reward: GridReward,
+  groundTruth: number[][],
+  {
+    alpha = 5e-3,
     maxDegree = 3,
     numEpisodes = 500,
     episodeLength = 500,
@@ -297,15 +351,29 @@ export function demoTDLinear(
     episodeLength?: number;
   } = {},
 ) {
-  // policy is never used since epsilon=1.0
-  const policy = createDefaultGridPolicy();
-
   const weights = binaryFeatures(0, 0, maxDegree).map(() => 0);
 
-  const getValue = (r: number, c: number) => {
-    const features = binaryFeatures(r, c, maxDegree);
-    return features.reduce((sum, f, i) => sum + f * weights[i], 0);
+  const getValue = (r: number, c: number) =>
+    getTDLinearValue(r, c, weights, maxDegree);
+  const getRootMeanSquareError = () => {
+    const meanSqr =
+      arr(env.rows * env.cols, idx => {
+        const { r, c } = indexToRC(env, idx);
+        const pred = getValue(r, c);
+        const truth = groundTruth[r][c];
+        return (pred - truth) ** 2;
+      }).reduce((a, b) => a + b, 0) /
+      (env.rows * env.cols);
+
+    return Math.sqrt(meanSqr);
   };
+
+  const iters = [
+    {
+      weights: [...weights],
+      error: getRootMeanSquareError(),
+    },
+  ];
 
   const randomStart = () => {
     const r = Math.floor(Math.random() * env.rows);
@@ -314,8 +382,16 @@ export function demoTDLinear(
       gridActionEnum[Math.floor(Math.random() * gridActionEnum.length)];
     return { r, c, action };
   };
-  const newEpisode = () =>
-    generateEpisode(env, policy, episodeLength, 1.0, randomStart());
+  const newEpisode = () => {
+    // policy is never used since epsilon=1.0
+    return generateEpisode(
+      env,
+      createDefaultGridPolicy(),
+      episodeLength,
+      1.0,
+      randomStart(),
+    );
+  };
 
   for (const episode of arr(numEpisodes, newEpisode)) {
     for (let t = 0; t < episode.length - 1; t++) {
@@ -329,5 +405,10 @@ export function demoTDLinear(
         weights[i] += alpha * tdError * features[i];
       }
     }
+    iters.push({
+      weights: [...weights],
+      error: getRootMeanSquareError(),
+    });
   }
+  return iters;
 }
