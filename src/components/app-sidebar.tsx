@@ -25,7 +25,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <span className="text-lg">
                   <Grid2x2Check />
                 </span>
-                <span className="text-base font-bold">SSPKU RL Lab</span>
+                <span className="text-base font-bold font-serif italic">
+                  SSPKU RL Lab
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

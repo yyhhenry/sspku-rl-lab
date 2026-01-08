@@ -19,7 +19,9 @@ export function HomePage() {
           <Grid2X2Check />
         </EmptyMedia>
       </EmptyHeader>
-      <EmptyTitle>SSPKU RL Lab</EmptyTitle>
+      <EmptyTitle>
+        <h1 className="font-bold font-serif italic">SSPKU RL Lab</h1>
+      </EmptyTitle>
       <EmptyDescription>
         <p>SSPKU Reinforcement Learning Lab</p>
         <p>
