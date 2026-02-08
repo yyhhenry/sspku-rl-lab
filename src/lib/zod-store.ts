@@ -1,7 +1,6 @@
 import { useAtom } from "jotai/react";
 import { atomWithStorage } from "jotai/utils";
-import { useCallback, useMemo } from "react";
-import { toast } from "sonner";
+import { atom } from "jotai/vanilla";
 import z, { ZodType } from "zod";
 
 export const storagePrefix = "sspku-rl-lab:";
@@ -10,40 +9,40 @@ export function createZodStore<T>(
   key: string,
   schema: ZodType<T>,
   createDefault: () => T,
-): () => readonly [T, (newValue: T) => void] {
+) {
+  const wrappedSchema = z.object({
+    value: schema,
+  });
   const baseAtom = atomWithStorage<{
     value: T;
   }>(storagePrefix + key, {
     value: createDefault(),
   });
-  return () => {
-    const [stored, setStored] = useAtom(baseAtom);
-    const value = useMemo((): T => {
-      const parsed = schema.safeParse(stored.value);
+
+  const zodAtom = atom(
+    get => {
+      const stored = get(baseAtom);
+      const parsed = wrappedSchema.safeParse(stored);
       if (parsed.success) {
-        return parsed.data;
+        return parsed.data.value;
       } else {
-        toast.error(
+        console.error(
           `Failed to retrieve ${key}: ${z.prettifyError(parsed.error)}`,
         );
-        const value = createDefault();
-        setStored({ value });
-        return value;
+        return createDefault();
       }
-    }, [setStored, stored.value]);
-    const setValue = useCallback(
-      (newValue: T) => {
-        const parsed = schema.safeParse(newValue);
-        if (parsed.success) {
-          setStored({ value: parsed.data });
-        } else {
-          toast.error(
-            `Failed to save ${key}: ${z.prettifyError(parsed.error)}`,
-          );
-        }
-      },
-      [setStored],
-    );
-    return [value, setValue] as const;
-  };
+    },
+    (_, set, newValue: T) => {
+      const parsed = schema.safeParse(newValue);
+      if (parsed.success) {
+        set(baseAtom, { value: parsed.data });
+      } else {
+        console.error(
+          `Failed to save ${key}: ${z.prettifyError(parsed.error)}`,
+        );
+      }
+    },
+  );
+
+  return () => useAtom(zodAtom);
 }
