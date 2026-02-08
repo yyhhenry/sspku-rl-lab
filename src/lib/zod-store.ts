@@ -1,6 +1,7 @@
 import { useAtom } from "jotai/react";
 import { atomWithStorage } from "jotai/utils";
 import { atom } from "jotai/vanilla";
+import { toast } from "sonner";
 import z, { ZodType } from "zod";
 
 export const storagePrefix = "sspku-rl-lab:";
@@ -26,7 +27,7 @@ export function createZodStore<T>(
       if (parsed.success) {
         return parsed.data.value;
       } else {
-        console.error(
+        toast.error(
           `Failed to retrieve ${key}: ${z.prettifyError(parsed.error)}`,
         );
         return createDefault();
@@ -37,9 +38,7 @@ export function createZodStore<T>(
       if (parsed.success) {
         set(baseAtom, { value: parsed.data });
       } else {
-        console.error(
-          `Failed to save ${key}: ${z.prettifyError(parsed.error)}`,
-        );
+        toast.error(`Failed to save ${key}: ${z.prettifyError(parsed.error)}`);
       }
     },
   );
